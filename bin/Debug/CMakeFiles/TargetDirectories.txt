@@ -1,5 +1,0 @@
-F:/Coding/qt-cpp/web-crawler/bin/Debug/CMakeFiles/edit_cache.dir
-F:/Coding/qt-cpp/web-crawler/bin/Debug/CMakeFiles/rebuild_cache.dir
-F:/Coding/qt-cpp/web-crawler/bin/Debug/src/CMakeFiles/web-crawler.dir
-F:/Coding/qt-cpp/web-crawler/bin/Debug/src/CMakeFiles/edit_cache.dir
-F:/Coding/qt-cpp/web-crawler/bin/Debug/src/CMakeFiles/rebuild_cache.dir

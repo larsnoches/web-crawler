@@ -1,3 +1,0 @@
-G:\CMake\bin\cmake.exe -E rm -f CMakeFiles\web_crawler_bin.dir/objects.a
-G:\MinGW-W64\mingw64\bin\ar.exe cr CMakeFiles\web_crawler_bin.dir/objects.a @CMakeFiles\web_crawler_bin.dir\objects1.rsp
-G:\MinGW-W64\mingw64\bin\g++.exe --sysroot=G:/MinGW-W64/mingw64 -g -Wl,--whole-archive CMakeFiles\web_crawler_bin.dir/objects.a -Wl,--no-whole-archive -o web_crawler_bin.exe -Wl,--out-implib,libweb_crawler_bin.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\web_crawler_bin.dir\linklibs.rsp

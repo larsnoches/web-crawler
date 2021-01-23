@@ -1,2 +1,0 @@
-G:\MinGW-W64\mingw64\bin\ar.exe qc libweb_crawler.a CMakeFiles/web_crawler.dir/basesocket.cpp.obj
-G:\MinGW-W64\mingw64\bin\ranlib.exe libweb_crawler.a
