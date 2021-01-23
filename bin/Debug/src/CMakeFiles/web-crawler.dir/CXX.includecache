@@ -1,0 +1,18 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+../../include/httpclient.h
+string
+-
+
+F:/Coding/qt-cpp/web-crawler/src/main.cpp
+iostream
+-
+httpclient.h
+F:/Coding/qt-cpp/web-crawler/src/httpclient.h
+

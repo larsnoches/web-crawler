@@ -1,0 +1,10 @@
+Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" failed.
+Compiler: G:/MinGW-W64/mingw64/bin/g++.exe 
+Build flags: 
+Id flags: -c;--target=x86_64-w64-mingw32 
+
+The output was:
+1
+g++.exe: error: unrecognized command line option '--target=x86_64-w64-mingw32'
+
+
