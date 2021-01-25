@@ -6,7 +6,7 @@ using namespace std;
 int main()
 {
 //    cout << "Hello World!" << endl;
-    string url = "http://yandex.ru/";
+    string url = "http://google.ru/";
     HttpClient httpClient(url);
     httpClient.run();
     return 0;

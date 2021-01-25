@@ -1,4 +1,4 @@
-#include "httpheader.h"
+#include "httprequestheader.h"
 #include "util.h"
 
 #include <time.h>
@@ -9,28 +9,28 @@
 using namespace std;
 
 const char* const methodStrings[] = { "GET", "POST" };
-const int resultCodes[] = { 200, 206, 301, 303, 304, 400, 403, 404, 405, 500, 502, 0 };
 const char* clientAgentString = "Mozilla/5.0 (Windows NT 6.3; WOW64) "
                                 "AppleWebKit/537.36 (KHTML, like Gecko) "
                                 "Chrome/87.0.4280.141 "
                                 "Safari/537.36 OPR/73.0.3856.344";
 
 
-HttpHeader::HttpHeader()
+HttpRequestHeader::HttpRequestHeader()
     : m_method(HttpGet),
       m_resource("/"),
       m_modifyTime(0),
+      m_userAgent(clientAgentString),
       m_rangeFrom(-1),
       m_rangeTo(-1),
       m_contentLength(0),
-      m_userAgent(clientAgentString),
       m_keepConnection(false)
 {
     //
 }
 
-void HttpHeader::parseHeaderItem(const std::string& name, const std::string& value)
+void HttpRequestHeader::parseHeaderItem(const std::string& name, const std::string& value)
 {
+
     // Some additional verifications applied to ensure nothing wrong happens later.
     if (name == "Host")
     {
@@ -89,7 +89,7 @@ void HttpHeader::parseHeaderItem(const std::string& name, const std::string& val
     m_customHeaders[name] = value;
 }
 
-void HttpHeader::parseLine(const std::string& line)
+void HttpRequestHeader::parseLine(const std::string& line)
 {
     size_t colonPos = line.find(':');
     if (colonPos == string::npos)
@@ -117,7 +117,7 @@ void HttpHeader::parseLine(const std::string& line)
     }
 }
 
-std::string HttpHeader::buildHeader()
+std::string HttpRequestHeader::buildHeader()
 {
     ostringstream r;
     r << methodStrings[m_method] << " " << m_resource << " "
@@ -156,7 +156,7 @@ std::string HttpHeader::buildHeader()
     return r.str();
 }
 
-void HttpHeader::parseCookies(const std::string& st)
+void HttpRequestHeader::parseCookies(const std::string& st)
 {
     string t = st;
     string p, l, r;
@@ -185,32 +185,37 @@ void HttpHeader::parseCookies(const std::string& st)
     }
 }
 
-void HttpHeader::setHost(std::string& host)
+void HttpRequestHeader::setHost(std::string& host)
 {
     m_host = host;
 }
 
-void HttpHeader::setResource(std::string& resource)
+void HttpRequestHeader::setResource(const char* resource)
 {
     m_resource = resource;
 }
 
-void HttpHeader::setCookies(std::map<std::string,std::string>& cookies)
+void HttpRequestHeader::setResource(std::string& resource)
+{
+    m_resource = resource;
+}
+
+void HttpRequestHeader::setCookies(std::map<std::string,std::string>& cookies)
 {
     m_cookies = cookies;
 }
 
-void HttpHeader::setContentType(std::string& contentType)
+void HttpRequestHeader::setContentType(std::string& contentType)
 {
     m_contentType = contentType;
 }
 
-void HttpHeader::setContentLength(int contentLength)
+void HttpRequestHeader::setContentLength(int contentLength)
 {
     m_contentLength = contentLength;
 }
 
-void HttpHeader::setCustomHeaders(std::map<std::string,std::string>& customHeaders)
+void HttpRequestHeader::setCustomHeaders(std::map<std::string,std::string>& customHeaders)
 {
     m_customHeaders = customHeaders;
 }

@@ -1,9 +1,10 @@
 #include "httpclient.h"
+#include "socket.h"
+#include "httprequestheader.h"
+#include "httpresponseheader.h"
 
 #include <stdexcept>
 #include <iostream>
-#include "socket.h"
-#include "httpheader.h"
 
 using namespace std;
 
@@ -26,17 +27,20 @@ void HttpClient::run()
         int port = 80;
         Socket socket(host, port);
         string st;
-        HttpHeader httpHeader;
-        httpHeader.setHost(host);
-//        httpHeader.setResource("/");
-        socket.write(httpHeader.buildHeader());
-        cout << httpHeader.buildHeader() << endl;
+        HttpRequestHeader httpRequestHeader;
+        httpRequestHeader.setHost(host);
+        httpRequestHeader.setResource("/");
+        cout << httpRequestHeader.buildHeader() << endl;
+        socket.write(httpRequestHeader.buildHeader());
+
+        HttpResponseHeader httpResponseHeader;
         while (!socket.isEof())
         {
             if (!socket.wait(5000)) break;
             st = socket.readLine();
             if (st.empty()) break;
-            httpHeader.parseLine(st);
+//            httpRequestHeader.parseLine(st);
+            httpResponseHeader.parseLine(st);
         }
 
     }

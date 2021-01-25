@@ -1,4 +1,4 @@
-set(SRC_LIST main.cpp inputstream.cpp outputstream.cpp socket.cpp httpclient.cpp httpheader.cpp util.cpp)
+set(SRC_LIST main.cpp inputstream.cpp outputstream.cpp socket.cpp httpclient.cpp httprequestheader.cpp httpresponseheader.cpp util.cpp)
 
 add_executable(${PROJECT_NAME} ${SRC_LIST})
 
