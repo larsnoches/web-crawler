@@ -7,12 +7,15 @@
 #ifdef WIN32
 #include <Ws2tcpip.h>
 #else
+
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <netdb.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <errno.h>
 #include <signal.h>
+#include <unistd.h>
 #endif
 
 using namespace std;

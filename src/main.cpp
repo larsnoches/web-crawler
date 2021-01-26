@@ -7,6 +7,6 @@ int main()
 {
     string url = "http://www.google.ru";
     HttpClient httpClient(url);
-//    httpClient.run();
+    httpClient.run();
     return 0;
 }

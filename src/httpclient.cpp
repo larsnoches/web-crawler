@@ -69,14 +69,32 @@ void HttpClient::run()
         cout << httpRequestHeader.buildHeader() << endl;
         socket.write(httpRequestHeader.buildHeader());
 
+        bool isHttpHeader = true;
         HttpResponseHeader httpResponseHeader;
         while (!socket.isEof())
         {
             if (!socket.wait(5000)) break;
             st = socket.readLine();
-            if (st.empty()) break;
+//            if (st.empty()) break;
 //            httpRequestHeader.parseLine(st);
-            httpResponseHeader.parseLine(st);
+
+//            cout << st << endl;
+
+            if (st.empty())
+            {
+                isHttpHeader = false;
+                continue;
+            }
+
+            if (isHttpHeader)
+            {
+                httpResponseHeader.parseLine(st);
+            }
+            else
+            {
+                cout << st << endl;
+            }
+
         }
 
     }
