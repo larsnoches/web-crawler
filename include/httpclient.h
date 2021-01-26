@@ -5,7 +5,12 @@
 
 class HttpClient
 {
-    std::string m_url;
+    std::string m_host;
+    std::string m_resource;
+    int m_port;
+    void cropHost(std::string url);
+    void cropResource(int pos, std::string url);
+
 public:
     HttpClient(std::string& url);
     void run();
