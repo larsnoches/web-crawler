@@ -17,6 +17,7 @@
 #include <signal.h>
 #include <unistd.h>
 #endif
+#include <openssl/err.h>
 
 using namespace std;
 
@@ -37,24 +38,24 @@ public:
 } wsinit;
 #endif
 
-Socket::Socket()
-    : m_sock(-1)
+Socket::Socket(string& host, int port, bool secure)
+    : m_sock(-1),
+      m_secure(secure),
+      m_sslCtx(nullptr),
+      m_ssl(nullptr)
 {
-}
-
-Socket::Socket(string& host, int port)
-    : m_sock(-1)
-{
+    if (m_secure) initSslCtx();
     open(host, port);
-}
-
-Socket::Socket(int sock)
-{
-    this->m_sock = sock;
+    if (m_secure) makeSecureConnection();
 }
 
 Socket::~Socket()
 {
+    if (m_secure)
+    {
+        SSL_shutdown(m_ssl);
+        SSL_free(m_ssl);
+    }
     if (m_sock >= 0)
     {
 #ifdef WIN32
@@ -63,6 +64,7 @@ Socket::~Socket()
         close(m_sock);
 #endif
     }
+    if (m_secure) SSL_CTX_free(m_sslCtx);
 }
 
 void Socket::setRemoteIP(std::string& remoteIP)
@@ -89,7 +91,6 @@ void Socket::open(string& host, int port)
 {
     int sd, err;
     struct addrinfo hints = {}, *addrs;
-//    char portStr[16] = {};
 
     hints.ai_family = AF_INET; // Since your original code was using sockaddr_in and
                                // PF_INET, I'm using AF_INET here to match.  Use
@@ -103,27 +104,22 @@ void Socket::open(string& host, int port)
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_protocol = IPPROTO_TCP;
 
-//    sprintf(portStr, "%d", port);
     string portStr = to_string(port);
 
     err = getaddrinfo(host.c_str(), portStr.c_str(), &hints, &addrs);
-//    err = getaddrinfo(host.c_str(), portStr, &hints, &addrs);
     if (err != 0)
     {
-//        fprintf(stderr, "%s: %s\n", hostname, gai_strerror(err));
         cout << gai_strerror(err) << endl;
         abort();
     }
 
-    for(struct addrinfo *addr = addrs; addr != NULL; addr = addr->ai_next)
+    for(struct addrinfo* addr = addrs; addr != NULL; addr = addr->ai_next)
     {
         sd = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
         if (sd == -1)
         {
             err = errno;
-            break; // if using AF_UNSPEC above instead of AF_INET/6 specifically,
-                   // replace this 'break' with 'continue' instead, as the 'ai_family'
-                   // may be different on the next iteration...
+            break;
         }
 
         if (connect(sd, addr->ai_addr, addr->ai_addrlen) == 0)
@@ -148,8 +144,65 @@ void Socket::open(string& host, int port)
     m_sock = sd;
 }
 
+void Socket::initSslCtx()
+{
+    // Create new client-method instance
+    const SSL_METHOD* method = TLS_client_method();
+    m_sslCtx = SSL_CTX_new(method);
+
+    if (m_sslCtx == nullptr)
+    {
+        ERR_print_errors_fp(stderr);
+        exit(EXIT_FAILURE);
+    }
+
+    m_ssl = SSL_new(m_sslCtx);
+    if (m_ssl == nullptr)
+    {
+        fprintf(stderr, "SSL_new() failed\n");
+        exit(EXIT_FAILURE);
+    }
+}
+
+void Socket::makeSecureConnection()
+{
+    if (!m_secure) return;
+    SSL_set_fd(m_ssl, m_sock);
+    const int status = SSL_connect(m_ssl);
+    if (status != 1)
+    {
+        SSL_get_error(m_ssl, status);
+        ERR_print_errors_fp(stderr);
+        fprintf(stderr, "SSL_connect failed with SSL_get_error code %d\n", status);
+        exit(EXIT_FAILURE);
+    }
+}
+
 bool Socket::waitUnbuffered(int timeout)
 {
+    if (m_secure)
+    {
+        switch(SSL_want(m_ssl))
+        {
+            case SSL_NOTHING:
+                cout << "SSL_NOTHING" << endl;
+                break;
+            case SSL_WRITING:
+                cout << "SSL_WRITING" << endl;
+                break;
+            case SSL_READING:
+                cout << "SSL_READING" << endl;
+                break;
+            case SSL_ASYNC_PAUSED:
+                cout << "SSL_ASYNC_PAUSED" << endl;
+                break;
+            case SSL_ASYNC_NO_JOBS:
+                cout << "SSL_ASYNC_NO_JOBS" << endl;
+                break;
+        }
+        cout << (SSL_has_pending(m_ssl) == 1) << endl;
+        cout << SSL_get_default_timeout(m_ssl) << endl;
+    }
     fd_set readfds;
     FD_ZERO(&readfds);
     FD_SET(m_sock, &readfds);
@@ -162,14 +215,32 @@ bool Socket::waitUnbuffered(int timeout)
 
 int Socket::readSomeUnbuffered(void* buf, int len)
 {
-    int br = recv(m_sock, reinterpret_cast<char*>(buf), len, 0);
+    int br = 0;
+    if (m_secure)
+    {
+        br = SSL_read(m_ssl, reinterpret_cast<char*>(buf), len);
+    }
+    else
+    {
+        br = recv(m_sock, reinterpret_cast<char*>(buf), len, 0);
+    }
+
     if (br < 0) throw IOException("Socket read error");
     return br;
 }
 
 int Socket::writeSome(const void* buf, int len)
 {
-    int bw = send(m_sock, reinterpret_cast<const char*>(buf), len, 0);
+    int bw = 0;
+    if (m_secure)
+    {
+        bw = SSL_write(m_ssl, reinterpret_cast<const char*>(buf), len);
+    }
+    else
+    {
+        bw = send(m_sock, reinterpret_cast<const char*>(buf), len, 0);
+    }
+
     if (bw < 0) throw IOException("Socket write error");
     return bw;
 }

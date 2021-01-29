@@ -10,6 +10,7 @@ enum HttpResult
     HttpOK, // 200 OK
     HttpPartialContent, // 206 Partial Content
     HttpMovedPermanently, // 301 Moved Permanently
+    HttpFound, // 302 Found
     HttpSeeOther, // 303 See Other
     HttpNotModified, // 304 Not Modified
     HttpBadRequest, // 400 Bad Request
@@ -64,8 +65,19 @@ public:
     HttpResponseHeader();
     // Parse a single line of header data.
     void parseLine(const std::string& line);
-    // Writes the entire header into string.
-//    std::string buildHeader();
+    HttpResult getResult();
+    std::string getServer();
+    std::string getContentType();
+    std::string getLocation();
+    long long getContentLength();
+    long long getRangeFrom();
+    long long getRangeTo();
+    long long getRangeTotal();
+    time_t getModifyTime();
+    time_t getExpireTime();
+    std::map<std::string, ResponseCookie> getCookies();
+    std::map<std::string, std::string> getCustomHeaders();
+
 };
 
 #endif // HTTPRESPONSEHEADER_H

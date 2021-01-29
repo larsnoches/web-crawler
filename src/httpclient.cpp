@@ -9,12 +9,14 @@
 using namespace std;
 
 HttpClient::HttpClient(std::string& url)
-    : m_port(80)
+    : m_port(80),
+      m_isSecure(false)
 {
-    cropHost(url);
+    int resourceStartPos = cropHost(url);
+    if (resourceStartPos > 0) cropResource(resourceStartPos, url);
 }
 
-void HttpClient::cropHost(string url)
+int HttpClient::cropHost(string url)
 {
     string proto = "://";
     // Find protocol in url
@@ -40,7 +42,7 @@ void HttpClient::cropHost(string url)
         // host would be a whole url string if fullStartPos is 0
         m_host = url.substr(fullStartPos, url.length() - fullStartPos);
     }
-    cropResource(fullStartPos, url);
+    return fullStartPos;
 }
 
 void HttpClient::cropResource(int pos, string url)
@@ -61,7 +63,7 @@ void HttpClient::run()
 {
     try
     {
-        Socket socket(m_host, m_port);
+        Socket socket(m_host, m_port, m_isSecure);
         string st;
         HttpRequestHeader httpRequestHeader;
         httpRequestHeader.setHost(m_host);
@@ -77,24 +79,46 @@ void HttpClient::run()
             st = socket.readLine();
 //            if (st.empty()) break;
 //            httpRequestHeader.parseLine(st);
-
-//            cout << st << endl;
+            cout << st << endl;
 
             if (st.empty())
             {
                 isHttpHeader = false;
-                continue;
+//                continue;
             }
 
             if (isHttpHeader)
             {
                 httpResponseHeader.parseLine(st);
-            }
-            else
-            {
-                cout << st << endl;
+                HttpResult httpResult = httpResponseHeader.getResult();
+                if (httpResult == HttpResult::HttpOK) continue;
+
+                string contentType = httpResponseHeader.getContentType();
+                if (!contentType.empty() && contentType.find("text/html", 0) == string::npos)
+                {
+                    throw runtime_error("This program is configured for html reading only.");
+                }
+
+                bool shouldRedirect = (httpResult == HttpResult::HttpMovedPermanently
+                    || httpResult == HttpResult::HttpFound || httpResult == HttpResult::HttpSeeOther);
+
+                string location = httpResponseHeader.getLocation();
+                if (shouldRedirect && !location.empty())
+                {
+                    if (location.find("https://", 0) != string::npos)
+                    {
+                        m_isSecure = true;
+                        m_port = 443;
+                    }
+                    int resourceStartPos = cropHost(location);
+                    if (resourceStartPos > 0) cropResource(resourceStartPos, location);
+                    run();
+                    return;
+                }
+//                continue;
             }
 
+//            cout << st << endl;
         }
 
     }

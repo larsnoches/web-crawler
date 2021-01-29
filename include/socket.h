@@ -2,6 +2,7 @@
 #define BASESOCKET_H
 
 #include <string>
+#include <openssl/ssl.h>
 #include "inputstream.h"
 #include "outputstream.h"
 
@@ -10,13 +11,15 @@ class Socket : public InputStream, public OutputStream
     int m_sock;
     std::string m_remoteIP;
     int m_remotePort;
-    bool m_connected;
+    bool m_secure;
+    SSL_CTX* m_sslCtx;
+    SSL* m_ssl;
     void open(std::string& host, int port);
+    void initSslCtx();
+    void makeSecureConnection();
 
 public:
-    Socket();
-    Socket(std::string& host, int port);
-    Socket(int socket);
+    Socket(std::string& host, int port, bool secure = false);
     ~Socket();
     void setRemoteIP(std::string& remoteIP);
     std::string getRemoteIP();

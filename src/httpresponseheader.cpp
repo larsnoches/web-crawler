@@ -12,6 +12,7 @@ const int resultCodes[]={
     200,
     206,
     301,
+    302,
     303,
     304,
     400,
@@ -27,6 +28,7 @@ const char* const resultStrings[]={
     "200 OK",
     "206 Partial Content",
     "301 Moved Permanently",
+    "302 Found",
     "303 See Other",
     "304 Not Modified",
     "400 Bad Request",
@@ -48,8 +50,8 @@ HttpResponseHeader::HttpResponseHeader()
     //
 }
 
-void HttpResponseHeader::parseHeaderItem(const std::string& name,
-                                         const std::string& value)
+void HttpResponseHeader::parseHeaderItem(const string& name,
+                                         const string& value)
 {
     // Some additional verifications applied to ensure nothing wrong happens later.
     if (name == "Server")
@@ -110,7 +112,7 @@ void HttpResponseHeader::parseHeaderItem(const std::string& name,
     m_customHeaders[name] = value;
 }
 
-void HttpResponseHeader::parseLine(const std::string& line)
+void HttpResponseHeader::parseLine(const string& line)
 {
     size_t colonPos = line.find(':');
     if (colonPos == string::npos)
@@ -135,61 +137,7 @@ void HttpResponseHeader::parseLine(const std::string& line)
     }
 }
 
-//std::string HttpResponseHeader::buildHeader()
-//{
-//    ostringstream r;
-//    r << "HTTP/1.1 " << resultStrings[m_result] << endl;
-//    time_t timeNow;
-//    r << "Date: " << Util::makeHttpTime(time(&timeNow)) << endl;
-//    r << "Server: " << m_server << endl;
-//    if (!m_location.empty())
-//    {
-//        r << "Location: " << m_location << endl;
-//    }
-//    else
-//    {
-//        if (m_modifyTime != 0)
-//        {
-//            r << "Last-Modified: " << Util::makeHttpTime(m_expireTime) << endl;
-//        }
-//        if (m_expireTime != 0)
-//        {
-//            r << "Expires: " << Util::makeHttpTime(m_expireTime) << endl;
-//        }
-//    }
-//    r << "Content-Length: " << m_contentLength << endl;
-//    if (m_rangeFrom != -1)
-//    {
-//        r << "Content-Range: bytes " << m_rangeFrom << "-" << m_rangeTo << "/" << m_rangeTotal << endl;
-//    }
-//    r << "Content-Type: " << m_contentType << endl;
-//    if (!m_cookies.empty())
-//    {
-//        time_t t;
-//        time(&t);
-//        for (map<string, ResponseCookie>::iterator iter = m_cookies.begin(); iter != m_cookies.end();
-//             iter++)
-//        {
-//            r << "Set-Cookie: ";
-//            r << iter->first << "=" << iter->second.value;
-//            if (iter->second.expireTime != 0)
-//            {
-//                r << "; expires=" << Util::makeHttpTime(iter->second.expireTime);
-//            }
-//            r << "; path=/" << endl;
-//        }
-//    }
-//    for (map<string, string>::iterator iter = m_customHeaders.begin(); iter != m_customHeaders.end();
-//         iter++)
-//    {
-//        r << iter->first << ": " << iter->second << endl;
-//    }
-//    r << "Connection: keep-alive" << endl;
-//    r << endl;
-//    return r.str();
-//}
-
-void HttpResponseHeader::parseCookies(const std::string& st)
+void HttpResponseHeader::parseCookies(const string& st)
 {
     size_t eqpos = st.find("name=");
     eqpos += 4;
@@ -207,4 +155,64 @@ void HttpResponseHeader::parseCookies(const std::string& st)
     {
         m_cookies[name].expireTime = 0;
     }
+}
+
+HttpResult HttpResponseHeader::getResult()
+{
+    return m_result;
+}
+
+string HttpResponseHeader::getServer()
+{
+    return m_server;
+}
+
+string HttpResponseHeader::getContentType()
+{
+    return m_contentType;
+}
+
+string HttpResponseHeader::getLocation()
+{
+    return m_location;
+}
+
+long long HttpResponseHeader::getContentLength()
+{
+    return m_contentLength;
+}
+
+long long HttpResponseHeader::getRangeFrom()
+{
+    return m_rangeFrom;
+}
+
+long long HttpResponseHeader::getRangeTo()
+{
+    return m_rangeTo;
+}
+
+long long HttpResponseHeader::getRangeTotal()
+{
+    return m_rangeTotal;
+}
+
+time_t HttpResponseHeader::getModifyTime()
+{
+    return m_modifyTime;
+}
+
+time_t HttpResponseHeader::getExpireTime()
+{
+    return m_expireTime;
+}
+
+map<string, ResponseCookie> HttpResponseHeader::getCookies()
+{
+    return m_cookies;
+}
+
+map<string, string> HttpResponseHeader::getCustomHeaders()
+{
+    return m_customHeaders;
 }
