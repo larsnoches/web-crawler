@@ -70,6 +70,16 @@ void HttpResponseHeader::parseHeaderItem(const string& name,
         m_contentType = value;
         return;
     }
+    if (name == "Content-Encoding")
+    {
+        m_contentEncoding = value;
+        return;
+    }
+    if (name == "Transfer-Encoding")
+    {
+        m_transferEncoding = value;
+        return;
+    }
     if (name == "Location")
     {
         m_location = value;
@@ -170,6 +180,16 @@ string HttpResponseHeader::getServer()
 string HttpResponseHeader::getContentType()
 {
     return m_contentType;
+}
+
+string HttpResponseHeader::getContentEncoding()
+{
+    return m_contentEncoding;
+}
+
+string HttpResponseHeader::getTransferEncoding()
+{
+    return m_transferEncoding;
 }
 
 string HttpResponseHeader::getLocation()

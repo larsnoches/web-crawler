@@ -28,7 +28,7 @@ HttpRequestHeader::HttpRequestHeader()
     //
 }
 
-void HttpRequestHeader::parseHeaderItem(const std::string& name, const std::string& value)
+void HttpRequestHeader::parseHeaderItem(const string& name, const string& value)
 {
 
     // Some additional verifications applied to ensure nothing wrong happens later.
@@ -89,7 +89,7 @@ void HttpRequestHeader::parseHeaderItem(const std::string& name, const std::stri
     m_customHeaders[name] = value;
 }
 
-void HttpRequestHeader::parseLine(const std::string& line)
+void HttpRequestHeader::parseLine(const string& line)
 {
     size_t colonPos = line.find(':');
     if (colonPos == string::npos)
@@ -151,12 +151,23 @@ std::string HttpRequestHeader::buildHeader()
     {
         r << iter->first << ": " << iter->second << endl;
     }
-    r << "Connection: keep-alive" << endl;
+
+    if (m_keepConnection)
+    {
+        r << "Connection: keep-alive" << endl;
+    }
+    else
+    {
+        r << "Connection: close" << endl;
+    }
+
+    if (!m_acceptEncoding.empty()) r << "Accept-Encoding: " << m_acceptEncoding << endl;
+
     r << endl;
     return r.str();
 }
 
-void HttpRequestHeader::parseCookies(const std::string& st)
+void HttpRequestHeader::parseCookies(const string& st)
 {
     string t = st;
     string p, l, r;
@@ -185,7 +196,12 @@ void HttpRequestHeader::parseCookies(const std::string& st)
     }
 }
 
-void HttpRequestHeader::setHost(std::string& host)
+void HttpRequestHeader::setKeepConnetion(bool keepConnection)
+{
+    m_keepConnection = keepConnection;
+}
+
+void HttpRequestHeader::setHost(string& host)
 {
     m_host = host;
 }
@@ -195,17 +211,17 @@ void HttpRequestHeader::setResource(const char* resource)
     m_resource = resource;
 }
 
-void HttpRequestHeader::setResource(std::string& resource)
+void HttpRequestHeader::setResource(string& resource)
 {
     m_resource = resource;
 }
 
-void HttpRequestHeader::setCookies(std::map<std::string,std::string>& cookies)
+void HttpRequestHeader::setCookies(map<string,string>& cookies)
 {
     m_cookies = cookies;
 }
 
-void HttpRequestHeader::setContentType(std::string& contentType)
+void HttpRequestHeader::setContentType(string& contentType)
 {
     m_contentType = contentType;
 }
@@ -215,7 +231,12 @@ void HttpRequestHeader::setContentLength(int contentLength)
     m_contentLength = contentLength;
 }
 
-void HttpRequestHeader::setCustomHeaders(std::map<std::string,std::string>& customHeaders)
+void HttpRequestHeader::setCustomHeaders(map<string,string>& customHeaders)
 {
     m_customHeaders = customHeaders;
+}
+
+void HttpRequestHeader::setAcceptEncoding(string acceptEncoding)
+{
+    m_acceptEncoding = acceptEncoding;
 }

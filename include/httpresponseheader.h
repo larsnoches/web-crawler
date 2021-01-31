@@ -39,6 +39,10 @@ private:
     std::string m_server;
     // The mime type of the content.
     std::string m_contentType;
+    // Encoding of content
+    std::string m_contentEncoding;
+    // Encoding of transfer
+    std::string m_transferEncoding;
     // Redirect location.
     std::string m_location;
     // Content-Length header value.
@@ -68,6 +72,8 @@ public:
     HttpResult getResult();
     std::string getServer();
     std::string getContentType();
+    std::string getContentEncoding();
+    std::string getTransferEncoding();
     std::string getLocation();
     long long getContentLength();
     long long getRangeFrom();

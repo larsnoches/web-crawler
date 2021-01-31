@@ -180,29 +180,29 @@ void Socket::makeSecureConnection()
 
 bool Socket::waitUnbuffered(int timeout)
 {
-    if (m_secure)
-    {
-        switch(SSL_want(m_ssl))
-        {
-            case SSL_NOTHING:
-                cout << "SSL_NOTHING" << endl;
-                break;
-            case SSL_WRITING:
-                cout << "SSL_WRITING" << endl;
-                break;
-            case SSL_READING:
-                cout << "SSL_READING" << endl;
-                break;
-            case SSL_ASYNC_PAUSED:
-                cout << "SSL_ASYNC_PAUSED" << endl;
-                break;
-            case SSL_ASYNC_NO_JOBS:
-                cout << "SSL_ASYNC_NO_JOBS" << endl;
-                break;
-        }
-        cout << (SSL_has_pending(m_ssl) == 1) << endl;
-        cout << SSL_get_default_timeout(m_ssl) << endl;
-    }
+//    if (m_secure)
+//    {
+//        switch(SSL_want(m_ssl))
+//        {
+//            case SSL_NOTHING:
+//                cout << "SSL_NOTHING" << endl;
+//                break;
+//            case SSL_WRITING:
+//                cout << "SSL_WRITING" << endl;
+//                break;
+//            case SSL_READING:
+//                cout << "SSL_READING" << endl;
+//                break;
+//            case SSL_ASYNC_PAUSED:
+//                cout << "SSL_ASYNC_PAUSED" << endl;
+//                break;
+//            case SSL_ASYNC_NO_JOBS:
+//                cout << "SSL_ASYNC_NO_JOBS" << endl;
+//                break;
+//        }
+//        cout << (SSL_has_pending(m_ssl) == 1) << endl;
+//        cout << SSL_get_default_timeout(m_ssl) << endl;
+//    }
     fd_set readfds;
     FD_ZERO(&readfds);
     FD_SET(m_sock, &readfds);

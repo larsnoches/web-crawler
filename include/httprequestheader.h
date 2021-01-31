@@ -36,6 +36,8 @@ class HttpRequestHeader
     std::map<std::string,std::string> m_customHeaders;
     // Is this connection persistent
     bool m_keepConnection;
+    // What encoding client accepts (gzip)
+    std::string m_acceptEncoding;
 
     // Parse cookies string.
     void parseCookies(const std::string& st);
@@ -50,6 +52,7 @@ public:
     // Writes the entire header into string.
     std::string buildHeader();
 
+    void setKeepConnetion(bool keepConnection);
     void setHost(std::string& host);
     void setResource(const char* resource);
     void setResource(std::string& resource);
@@ -57,6 +60,7 @@ public:
     void setContentType(std::string& contentType);
     void setContentLength(int contentLength);
     void setCustomHeaders(std::map<std::string,std::string>& customHeaders);
+    void setAcceptEncoding(std::string acceptEncoding);
 };
 
 #endif // HTTPREQUESTHEADER_H

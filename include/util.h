@@ -9,6 +9,7 @@ class Util
 public:
     static std::string htmlEscape(const std::string& st);
     static unsigned char hexConv(char t);
+    static std::string fromHexToString(const std::string& hexString);
     static std::string stringToLower(const std::string& st);
     static std::string urlDecode(const std::string& st);
     static std::string urlEncode(const std::string& st);

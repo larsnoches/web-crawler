@@ -42,6 +42,23 @@ unsigned char Util::hexConv(char t)
     }
 }
 
+string Util::fromHexToString(const string& hexString)
+{
+  string retString;
+  for (string::const_iterator p = hexString.begin();
+                              p != hexString.end();
+                              p++) {
+    char c = hexConv(*p);
+    p++;
+    if (p == hexString.end()) {
+      break;
+    }
+    c = (c << 4) + hexConv(*p);
+    retString.push_back(c);
+  }
+  return retString;
+}
+
 std::string Util::stringToLower(const std::string& st)
 {
     ostringstream r;
