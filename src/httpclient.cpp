@@ -2,12 +2,13 @@
 #include "httprequestheader.h"
 #include "httpresponseheader.h"
 #include "util.h"
+#include "gzipdecompressor.h"
 
 #include <stdexcept>
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <ios>
-#include <zlib.h>
 
 using namespace std;
 
@@ -69,75 +70,12 @@ void HttpClient::cropResource(int pos, string url)
     }
 }
 
-bool HttpClient::gzipInflate(const string& compressedBytes, string& uncompressedBytes)
+std::string HttpClient::gzipDecompress(const char* data, std::size_t size)
 {
-    if (compressedBytes.size() == 0)
-    {
-        uncompressedBytes = compressedBytes;
-        return true;
-    }
-
-    uncompressedBytes.clear();
-
-    unsigned full_length = compressedBytes.size();
-    unsigned half_length = compressedBytes.size() / 2;
-
-    unsigned uncompLength = full_length;
-    char* uncomp = (char*)calloc(sizeof(char), uncompLength);
-
-    z_stream strm;
-    strm.next_in = (Bytef*)compressedBytes.c_str();
-    strm.avail_in = compressedBytes.size();
-    strm.total_out = 0;
-    strm.zalloc = Z_NULL;
-    strm.zfree = Z_NULL;
-
-    bool done = false;
-
-    if (inflateInit2(&strm, (16 + MAX_WBITS)) != Z_OK)
-    {
-        free(uncomp);
-        return false;
-    }
-
-    while (!done)
-    {
-        // If our output buffer is too small
-        if (strm.total_out >= uncompLength)
-        {
-            // Increase size of output buffer
-            char* uncomp2 = (char*)calloc(sizeof(char), uncompLength + half_length);
-            memcpy(uncomp2, uncomp, uncompLength);
-            uncompLength += half_length;
-            free(uncomp);
-            uncomp = uncomp2;
-        }
-
-        strm.next_out = (Bytef*)(uncomp + strm.total_out);
-        strm.avail_out = uncompLength - strm.total_out;
-
-        // Inflate another chunk.
-        int err = inflate(&strm, Z_SYNC_FLUSH);
-        if (err == Z_STREAM_END)
-            done = true;
-        else if (err != Z_OK)
-        {
-            break;
-        }
-    }
-
-    if (inflateEnd(&strm) != Z_OK)
-    {
-        free(uncomp);
-        return false;
-    }
-
-    for (size_t i = 0; i < strm.total_out; ++i)
-    {
-        uncompressedBytes += uncomp[i];
-    }
-    free(uncomp);
-    return true;
+    GzipDecompressor decomp;
+    std::string output;
+    decomp.decompress(output, data, size);
+    return output;
 }
 
 string HttpClient::readBody(Socket& socket, int chunkLen)
@@ -154,23 +92,11 @@ string HttpClient::readBody(Socket& socket, int chunkLen)
     {
         if (socket.isEof() || !socket.wait(5000)) return "";
         string data = socket.read(chunkLen);
-        if (m_useGzipEncoding)
-        {
-            string uncompressed;
-            gzipInflate(data, uncompressed);
-            data = uncompressed;
-        }
         return data;
     }
 
     // handling ordinary data
     string ordinaryLine = socket.readLine();
-    if (m_useGzipEncoding)
-    {
-        string uncompressed;
-        gzipInflate(ordinaryLine, uncompressed);
-        ordinaryLine = uncompressed;
-    }
     return ordinaryLine;
 }
 
@@ -183,20 +109,18 @@ void HttpClient::run()
         HttpRequestHeader httpRequestHeader;
         httpRequestHeader.setHost(m_host);
         httpRequestHeader.setResource(m_resource);
+
         if (m_useGzipEncoding) httpRequestHeader.setAcceptEncoding("gzip");
 
         map<string, string> customHeaders = {
             {
                 "Accept",
-                "text/html,application/xhtml+xml,"
-                "application/xml;q=0.9,image/avif,"
-                "image/webp,image/apng,*/*;q=0.8,"
-                "application/signed-exchange;v=b3;q=0.9"
+                "text/html"
             },
             {
                 "Accept-Language",
                 "ru-RU,ru;q=0.9"
-            },
+            }
         };
         httpRequestHeader.setCustomHeaders(customHeaders);
 
@@ -206,7 +130,9 @@ void HttpClient::run()
         bool isHttpHeader = true;
         bool shouldRedirect = false;
         HttpResponseHeader httpResponseHeader;
-        fstream outf("page.htm", ios::out);
+
+        fstream outf("index.html", ios::out);
+        ostringstream page;
         while (!socket.isEof())
         {
             if (!socket.wait(5000)) break;
@@ -215,7 +141,11 @@ void HttpClient::run()
             if (!isHttpHeader)
             {
                 string data = readBody(socket);
-                cout << data << endl;
+                if (m_useGzipEncoding)
+                {
+                    page << data;
+                    continue;
+                }
                 outf << data;
                 continue;
             }
@@ -282,6 +212,14 @@ void HttpClient::run()
                 return;
             }
         }
+
+        if (m_useGzipEncoding)
+        {
+            string pageCompressed = page.str();
+            string pageDecompressed = gzipDecompress(pageCompressed.data(), pageCompressed.size());
+            outf << pageDecompressed;
+        }
+
         outf.close();
     }
     catch(exception& e)

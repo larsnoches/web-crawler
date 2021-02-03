@@ -16,6 +16,7 @@ class HttpClient
     int cropHost(std::string url);
     void cropResource(int pos, std::string url);
     bool gzipInflate(const std::string& compressedBytes, std::string& uncompressedBytes);
+    std::string gzipDecompress(const char* data, std::size_t size);
     std::string readBody(Socket& socket, int chunkLen = 0);
 
 public:

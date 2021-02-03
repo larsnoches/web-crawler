@@ -5,8 +5,8 @@ using namespace std;
 
 int main()
 {
-    string url = "https://www.ya.ru";
-    HttpClient httpClient(url, false);
+    string url = "https://www.google.ru";
+    HttpClient httpClient(url, true);
     httpClient.run();
     return 0;
 }
