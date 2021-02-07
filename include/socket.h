@@ -21,6 +21,7 @@ class Socket : public InputStream, public OutputStream
 public:
     Socket(std::string& host, int port, bool secure = false);
     ~Socket();
+    void close();
     void setRemoteIP(std::string& remoteIP);
     std::string getRemoteIP();
     void setRemotePort(int remotePort);

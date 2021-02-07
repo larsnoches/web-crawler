@@ -51,6 +51,11 @@ Socket::Socket(string& host, int port, bool secure)
 
 Socket::~Socket()
 {
+    close();
+}
+
+void Socket::close()
+{
     if (m_secure)
     {
         SSL_shutdown(m_ssl);

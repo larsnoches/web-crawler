@@ -5,8 +5,9 @@ using namespace std;
 
 int main()
 {
-    string url = "https://www.google.ru";
+    string url = "https://nodejs.org/docs/latest-v13.x/api/addons.html";
     HttpClient httpClient(url, true);
-    httpClient.run();
+    httpClient.start();
+//    httpClient.run();
     return 0;
 }

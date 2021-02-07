@@ -1,4 +1,15 @@
-set(SRC_LIST main.cpp inputstream.cpp outputstream.cpp socket.cpp httpclient.cpp httprequestheader.cpp httpresponseheader.cpp util.cpp gzipdecompressor.cpp)
+set(SRC_LIST
+    main.cpp
+    inputstream.cpp
+    outputstream.cpp
+    socket.cpp
+    httpclient.cpp
+    httprequestheader.cpp
+    httpresponseheader.cpp
+    util.cpp
+    gzipdecompressor.cpp
+    page.cpp
+)
 
 add_executable(${PROJECT_NAME} ${SRC_LIST})
 
