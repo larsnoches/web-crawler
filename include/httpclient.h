@@ -20,6 +20,7 @@ class HttpClient
 
     int cropHost(std::string url);
     void cropResource(int pos, std::string url);
+    void parseLinks(Page& page);
     Page isolatePage();
     bool addPage(Page& page);
 
@@ -30,7 +31,6 @@ class HttpClient
     std::string readBody(Socket& socket, int chunkLen = 0);
     void makeRequest(Socket& socket, Page& page);
     void getResponse(Socket& socket, Page& page);
-    void run();
     void run_d();
 
 public:

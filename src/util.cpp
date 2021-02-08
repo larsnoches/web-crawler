@@ -314,6 +314,7 @@ void Util::trim(std::string& st)
 {
     while ((!st.empty()) && ((st[0] == ' ') ||
                              (st[0] == '\t') ||
+                             (st[0] == '\0') ||
                              (st[0] == '\n') ||
                              (st[0] == '\r'))
            )
@@ -322,6 +323,7 @@ void Util::trim(std::string& st)
     }
     while ((!st.empty()) && ((st[st.size() - 1] == ' ') ||
                              (st[st.size() - 1] == '\t') ||
+                             (st[st.size() - 1] == '\0') ||
                              (st[st.size() - 1] == '\n') ||
                              (st[st.size() - 1] == '\r'))
            )

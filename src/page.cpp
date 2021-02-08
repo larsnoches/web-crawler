@@ -1,14 +1,13 @@
 #include "page.h"
+#include "util.h"
 
-//#include <iostream>
+#include <iostream>
+#include <sstream>
 #include <fstream>
-//#include <sstream>
 #include <ios>
 #include <iterator>
-//#include <filesystem>
 
 using namespace std;
-//namespace fs = filesystem;
 
 Page::Page()
 {
@@ -96,8 +95,83 @@ string Page::getLink()
     return m_path + m_name;
 }
 
-void Page::replaceLink(string& link)
+bool Page::extractLinkFromData(std::string& str, std::string& href)
 {
+    string hrefValStart = "href=\"";
+    string hrefValEnd = "\"";
+//    string href = hrefRecur;
+    if (href.empty())
+    {
+        size_t pos1 = str.find(hrefValStart, 0);
+        if (pos1 != string::npos)
+        {
+            size_t copyPos1 = pos1 + + hrefValStart.length();
+            size_t pos2 = str.find(hrefValEnd, copyPos1);
+            if (pos2 == string::npos)
+            {
+                href = str.substr(copyPos1, str.length() - copyPos1);
+                return false;
+            }
+            href = str.substr(copyPos1, pos2 - copyPos1);
+            Util::trim(href);
+            str.erase(0, pos2 + hrefValEnd.length());
+        }
+    }
+    else
+    {
+        size_t pos1 = str.find(hrefValEnd, 0);
+        if (pos1 == string::npos)
+        {
+            href += str.substr(0, str.length());
+            return false;
+        }
+        href += str.substr(0, pos1);
+        Util::trim(href);
+        str.erase(0, pos1 + hrefValEnd.length());
+    }
+    if (str.empty()) return false;
+    if (href.empty()) return false;
+    return true;
+}
+
+deque<string> Page::findLinks()
+{
+    deque<string> links;
+    string currentHref;
+
+    std::istringstream iss(m_data);
+    int dataLen = m_data.length();
+    int dataReadedLen = 0;
+
+    while (dataReadedLen < dataLen)
+    {
+        int readingLen = 256;
+        if (dataReadedLen + readingLen > dataLen)
+        {
+            readingLen = dataLen - dataReadedLen;
+        }
+
+        char line[readingLen];
+        iss.read(line, readingLen);
+
+        // search link
+        string lineStr = line;
+        cout << "line:" << lineStr << endl << endl;
+        while (extractLinkFromData(lineStr, currentHref))
+        {
+            cout << "href:" << currentHref << endl << endl;
+            links.push_back(currentHref);
+            currentHref.clear();
+        }
+        // replace link: m_data.replace()
+
+//        if (!href.empty()) links.push_back(href);
+
+        dataReadedLen += readingLen;
+    }
+
+
+    return links;
 //    string href;
 
 //    if (href.empty())

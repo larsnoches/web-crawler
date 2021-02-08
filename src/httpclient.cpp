@@ -71,6 +71,11 @@ void HttpClient::cropResource(int pos, string url)
     }
 }
 
+void HttpClient::parseLinks(Page& page)
+{
+    deque<string> links = page.findLinks();
+}
+
 /*
 /index?p=what
 /index.html
@@ -323,143 +328,9 @@ void HttpClient::getResponse(Socket& socket, Page& page)
         page.writeData(pageDecompressed);
     }
 
+    parseLinks(page);
     page.save();
 //    m_pages.push_back(page);
-}
-
-void HttpClient::run()
-{
-    try
-    {
-        Socket socket(m_host, m_port, m_useSecure);
-
-        HttpRequestHeader httpRequestHeader;
-        httpRequestHeader.setHost(m_host);
-        httpRequestHeader.setResource(m_resource);
-
-        Page page = isolatePage();
-        if (!addPage(page)) return;
-
-        if (m_useGzipEncoding) httpRequestHeader.setAcceptEncoding("gzip");
-
-        map<string, string> customHeaders = {
-            {
-                "Accept",
-                "text/html"
-            },
-            {
-                "Accept-Language",
-                "ru-RU,ru;q=0.9"
-            }
-        };
-        httpRequestHeader.setCustomHeaders(customHeaders);
-
-        cout << httpRequestHeader.buildHeader() << endl;
-        socket.write(httpRequestHeader.buildHeader());
-
-        bool isHttpHeader = true;
-        bool shouldRedirect = false;
-        HttpResponseHeader httpResponseHeader;
-
-//        fstream outf("index.html", ios::out);
-        ostringstream pageGzipStream;
-        while (!socket.isEof())
-        {
-            if (!socket.wait(5000)) break;
-
-            // body
-            if (!isHttpHeader)
-            {
-                string data = readBody(socket);
-                if (m_useGzipEncoding)
-                {
-                    pageGzipStream << data;
-                    continue;
-                }
-//                outf << data;
-                page.writeData(data);
-                continue;
-            }
-
-            // header
-            string st = socket.readLine();
-            if (st.empty() && isHttpHeader)
-            {
-                isHttpHeader = false;
-                continue;
-            }
-            cout << st << endl;
-
-            httpResponseHeader.parseLine(st);
-            HttpResult httpResult = httpResponseHeader.getResult();
-
-            // only text/html saving
-            string contentType = httpResponseHeader.getContentType();
-            if (!contentType.empty() && contentType.find("text/html", 0) == string::npos)
-            {
-                throw runtime_error("This program is configured for html reading only.");
-            }
-
-            // reconnect with gzip encoding
-            if (!m_useGzipEncoding)
-            {
-                string contentEncoding = httpResponseHeader.getContentEncoding();
-                if (!contentEncoding.empty() && contentEncoding.find("gzip", 0) != string::npos)
-                {
-                    m_useGzipEncoding = true;
-                    run();
-                    return;
-                }
-            }
-
-            // check for chunked data
-            if (!m_bodyChunked)
-            {
-                string transferEncoding = httpResponseHeader.getTransferEncoding();
-                if (!transferEncoding.empty() && transferEncoding.find("chunked") != string::npos)
-                {
-                    m_bodyChunked = true;
-                }
-            }
-
-            // ordinary data
-            if (httpResult == HttpResult::HttpOK) continue;
-
-            // redirect to specified location
-            shouldRedirect = (httpResult == HttpResult::HttpMovedPermanently
-                || httpResult == HttpResult::HttpFound || httpResult == HttpResult::HttpSeeOther);
-
-            string location = httpResponseHeader.getLocation();
-            if (shouldRedirect && !location.empty())
-            {
-                if (location.find("https://", 0) != string::npos)
-                {
-                    m_useSecure = true;
-                    m_port = 443;
-                }
-                int resourceStartPos = cropHost(location);
-                if (resourceStartPos > 0) cropResource(resourceStartPos, location);
-                run();
-                return;
-            }
-        }
-
-        if (m_useGzipEncoding)
-        {
-            string pageCompressed = pageGzipStream.str();
-            string pageDecompressed = gzipDecompress(pageCompressed.data(), pageCompressed.size());
-//            outf << pageDecompressed;
-            page.writeData(pageDecompressed);
-        }
-
-//        outf.close();
-        page.save();
-        m_pages.push_back(page);
-    }
-    catch(exception& e)
-    {
-        cout << e.what() << endl;
-    }
 }
 
 void HttpClient::start()
@@ -468,11 +339,13 @@ void HttpClient::start()
     cout << "host: " << m_host << endl;
     cout << "path: " << m_resource << endl;
     cout << "proto: " << (m_useSecure ? "https" : "http") << endl;
+    cout << "" << endl;
 
     Page indexPage = isolatePage();
     addPage(indexPage);
     run_d();
 
+    cout << "" << endl;
     cout << "Stopping" << endl;
 }
 

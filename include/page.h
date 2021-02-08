@@ -2,7 +2,7 @@
 #define PAGE_H
 
 #include <string>
-//#include <vector>
+#include <deque>
 
 class Page
 {
@@ -11,6 +11,8 @@ class Page
     std::string m_fakeName;
 //    std::vector<char> m_data;
     std::string m_data;
+
+    bool extractLinkFromData(std::string& str, std::string& href);
 
 public:
 //    Page(Page& p) {};
@@ -26,7 +28,7 @@ public:
     std::string getFakeName();
     std::string readData();
     std::string getLink();
-    void replaceLink(std::string& link);
+    std::deque<std::string> findLinks();
 };
 
 #endif // PAGE_H
