@@ -24,56 +24,92 @@ HttpClient::HttpClient(std::string& url, bool useGzipEncoding)
         m_port = 443;
         m_useSecure = true;
     }
-    int resourceStartPos = cropHost(url);
-    if (resourceStartPos > 0) cropResource(resourceStartPos, url);
+    m_host = cropHost(url);
+    if (!m_host.empty()) m_resource = cropResource(m_host, url);
 }
 
-int HttpClient::cropHost(string url)
+string HttpClient::cropHost(string url)
 {
+    string host;
     string proto = "://";
     // Find protocol in url
     int hostEndsAt = 0;
     int hostStartsAt = url.find(proto, 0);
     int fullStartPos = 0;
 
-    if (hostStartsAt != (int)string::npos)
+    if (hostStartsAt == (int)string::npos)
     {
-        // Set full position for crop statring
-        fullStartPos = hostStartsAt + proto.length();
+        return host;
     }
+    // Set full position for crop statring
+    fullStartPos = hostStartsAt + proto.length();
 
     // Find first slash at url
     hostEndsAt = url.find("/", fullStartPos);
     // Crop the host
     if (hostEndsAt != (int)string::npos)
     {
-        m_host = url.substr(fullStartPos, hostEndsAt - fullStartPos);
+        host = url.substr(fullStartPos, hostEndsAt - fullStartPos);
     }
     else
     {
-        // host would be a whole url string if fullStartPos is 0
-        m_host = url.substr(fullStartPos, url.length() - fullStartPos);
+        // host would be a whole url string
+        host = url.substr(fullStartPos, url.length() - fullStartPos);
     }
-    return fullStartPos;
+    return host;
 }
 
-void HttpClient::cropResource(int pos, string url)
+string HttpClient::cropResource(string host, string url)
 {
+    string resource;
     // Crop the resource
-    int resourceStartPos = m_host.length() + pos;
+    size_t startPos = url.find(host, 0);
+    if (startPos == string::npos) return resource;
+
+    int resourceStartPos = startPos + host.length();
     if (url.length() - resourceStartPos > 0)
     {
-        m_resource = url.substr(resourceStartPos, url.length() - resourceStartPos);
+        resource = url.substr(resourceStartPos, url.length() - resourceStartPos);
     }
     else
     {
-        m_resource = "/";
+        resource = "/";
     }
+    return resource;
 }
 
 void HttpClient::parseLinks(Page& page)
 {
     deque<string> links = page.findLinks();
+    while (!links.empty())
+    {
+        string link = links.front();
+        links.pop_front();
+        if (link.empty()) continue;
+
+        string host = cropHost(link);
+        if (!host.empty() && host != m_host)
+        {
+            cout << host << "!=" << "m_host" << endl;
+            continue;
+        }
+
+        Page anotherPage = isolatePage(link);
+        string pageFakeName = anotherPage.getFakeName();
+
+        // duplicate check
+        auto ret = m_processedUrls.insert(
+            pair<string, string>(link, pageFakeName)
+        );
+        if (ret.second == false)
+        {
+            pageFakeName = ret.first->second;
+        }
+
+        // add to processing
+        if (ret.second == true) addPage(anotherPage);
+        page.replaceLink(link, pageFakeName);
+    }
 }
 
 /*
@@ -82,9 +118,9 @@ void HttpClient::parseLinks(Page& page)
 /pages/index
 */
 
-Page HttpClient::isolatePage()
+Page HttpClient::isolatePage(string res)
 {
-    string res = m_resource;
+//    string res = m_resource;
     Util::substitute(res, "...", "");
 
     // find slash
@@ -124,11 +160,12 @@ Page HttpClient::isolatePage()
     }
 
 //    pageName = res.substr(slashPos, res.length() - slashPos);
-    size_t dotPos = pageName.find(".");
-    if (dotPos != string::npos)
-    {
-        pageName = pageName.substr(0, dotPos);
-    }
+
+//    size_t dotPos = pageName.find(".");
+//    if (dotPos != string::npos)
+//    {
+//        pageName = pageName.substr(0, dotPos);
+//    }
 
     Page page;
     page.setName(pageName);
@@ -220,9 +257,9 @@ bool HttpClient::readHeader(Socket& socket,
         {
             m_useSecure = true;
             m_port = 443;
-        }
-        int resourceStartPos = cropHost(location);
-        if (resourceStartPos > 0) cropResource(resourceStartPos, location);
+        }       
+        m_host = cropHost(location);
+        if (!m_host.empty()) m_resource = cropResource(m_host, location);
 
         // another request
         socket.close();
@@ -249,8 +286,16 @@ string HttpClient::readBody(Socket& socket, int chunkLen)
     {
         string st = socket.readLine();
         if (st.empty()) return "";
-        chunkLen = stoi(st, nullptr, 16);
-        return readBody(socket, chunkLen);
+        try
+        {
+            chunkLen = stoi(st, nullptr, 16);
+            return readBody(socket, chunkLen);
+        }
+        catch (exception e) {
+            m_bodyChunked = false;
+            return readBody(socket, chunkLen);
+        }
+
     }
     if (m_bodyChunked && chunkLen > 0)
     {
@@ -269,7 +314,8 @@ void HttpClient::makeRequest(Socket& socket, Page& page)
     HttpRequestHeader httpRequestHeader;
     httpRequestHeader.setHost(m_host);
 
-    m_resource = page.getPath();
+    string gotLink = page.getLink();
+    m_resource = gotLink[0] != '/' ? ("/" + gotLink) : gotLink;
     httpRequestHeader.setResource(m_resource);
 
 //    Page page = isolatePage();
@@ -341,7 +387,7 @@ void HttpClient::start()
     cout << "proto: " << (m_useSecure ? "https" : "http") << endl;
     cout << "" << endl;
 
-    Page indexPage = isolatePage();
+    Page indexPage = isolatePage(m_resource);
     addPage(indexPage);
     run_d();
 
@@ -354,6 +400,9 @@ void HttpClient::run_d()
     while (!m_pages.empty())
     {
         Socket socket(m_host, m_port, m_useSecure);
+        m_bodyChunked = false;
+        m_useGzipEncoding = false;
+
 
         // get page from front
         Page pageItem = m_pages.front();

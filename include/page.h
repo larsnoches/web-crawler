@@ -29,6 +29,7 @@ public:
     std::string readData();
     std::string getLink();
     std::deque<std::string> findLinks();
+    void replaceLink(std::string& link, std::string& fakeName);
 };
 
 #endif // PAGE_H

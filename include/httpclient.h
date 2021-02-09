@@ -6,6 +6,7 @@
 
 #include <string>
 #include <deque>
+#include <map>
 
 class HttpClient
 {
@@ -17,11 +18,13 @@ class HttpClient
     bool m_bodyChunked;
     int m_pageCounter;
     std::deque<Page> m_pages;
+    // url, fakeName
+    std::map<std::string, std::string> m_processedUrls;
 
-    int cropHost(std::string url);
-    void cropResource(int pos, std::string url);
+    std::string cropHost(std::string url);
+    std::string cropResource(std::string host, std::string url);
     void parseLinks(Page& page);
-    Page isolatePage();
+    Page isolatePage(std::string res);
     bool addPage(Page& page);
 
     bool readHeader(Socket& socket,

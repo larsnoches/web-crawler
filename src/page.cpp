@@ -97,6 +97,7 @@ string Page::getLink()
 
 bool Page::extractLinkFromData(std::string& str, std::string& href)
 {
+    if (str.empty()) return false;
     string hrefValStart = "href=\"";
     string hrefValEnd = "\"";
 //    string href = hrefRecur;
@@ -105,7 +106,7 @@ bool Page::extractLinkFromData(std::string& str, std::string& href)
         size_t pos1 = str.find(hrefValStart, 0);
         if (pos1 != string::npos)
         {
-            size_t copyPos1 = pos1 + + hrefValStart.length();
+            size_t copyPos1 = pos1 + hrefValStart.length();
             size_t pos2 = str.find(hrefValEnd, copyPos1);
             if (pos2 == string::npos)
             {
@@ -122,14 +123,13 @@ bool Page::extractLinkFromData(std::string& str, std::string& href)
         size_t pos1 = str.find(hrefValEnd, 0);
         if (pos1 == string::npos)
         {
-            href += str.substr(0, str.length());
+            href += str;// str.substr(0, str.length());
             return false;
         }
         href += str.substr(0, pos1);
         Util::trim(href);
         str.erase(0, pos1 + hrefValEnd.length());
     }
-    if (str.empty()) return false;
     if (href.empty()) return false;
     return true;
 }
@@ -143,19 +143,20 @@ deque<string> Page::findLinks()
     int dataLen = m_data.length();
     int dataReadedLen = 0;
 
-    while (dataReadedLen < dataLen)
+    while (!iss.eof())
     {
-        int readingLen = 256;
-        if (dataReadedLen + readingLen > dataLen)
-        {
-            readingLen = dataLen - dataReadedLen;
-        }
+//        int readingLen = 256;
+//        if (dataReadedLen + readingLen > dataLen)
+//        {
+//            readingLen = dataLen - dataReadedLen;
+//        }
 
-        char line[readingLen];
-        iss.read(line, readingLen);
+//        char line[readingLen];
+//        iss.read(line, readingLen);
 
         // search link
-        string lineStr = line;
+        string lineStr;
+        iss >> lineStr;
         cout << "line:" << lineStr << endl << endl;
         while (extractLinkFromData(lineStr, currentHref))
         {
@@ -167,41 +168,46 @@ deque<string> Page::findLinks()
 
 //        if (!href.empty()) links.push_back(href);
 
-        dataReadedLen += readingLen;
+//        dataReadedLen += readingLen;
     }
+
+//    while (dataReadedLen < dataLen)
+//    {
+//        int readingLen = 256;
+//        if (dataReadedLen + readingLen > dataLen)
+//        {
+//            readingLen = dataLen - dataReadedLen;
+//        }
+
+//        char line[readingLen];
+//        iss.read(line, readingLen);
+
+//        // search link
+//        string lineStr = line;
+//        cout << "line:" << lineStr << endl << endl;
+//        while (extractLinkFromData(lineStr, currentHref))
+//        {
+//            cout << "href:" << currentHref << endl << endl;
+//            links.push_back(currentHref);
+//            currentHref.clear();
+//        }
+//        // replace link: m_data.replace()
+
+//        //        if (!href.empty()) links.push_back(href);
+
+//        dataReadedLen += readingLen;
+//    }
 
 
     return links;
-//    string href;
+}
 
-//    if (href.empty())
-//    {
-
-//        int pos1 = str.find("href=\"", 0);
-//        if (pos1 != string::npos)
-//        {
-//            int pos2 = str.find("\"", pos1);
-//            if (pos2 == string::npos)
-//            {
-//                href = str.substr(pos1, str.length());
-//            }
-//            else
-//            {
-//                href = str.substr(pos1, pos2 - pos1);
-//            }
-//        }
-//    }
-//    else
-//    {
-
-//        int pos1 = str.find("\"", 0);
-//        if (pos1 != string::npos)
-//        {
-//            href += str.substr(0, pos1);
-//        }
-//        else
-//        {
-//            href += str.substr(0, str.length())
-//        }
-//    }
+void Page::replaceLink(string& link, string& fakeName)
+{
+    string whatLink = link;
+    if (link == "/")
+    {
+        whatLink = "\"/\"";
+    }
+    Util::substitute(m_data, whatLink, fakeName);
 }
