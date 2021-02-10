@@ -9,27 +9,29 @@ class Page
     std::string m_name;
     std::string m_path;
     std::string m_fakeName;
-//    std::vector<char> m_data;
     std::string m_data;
+    int m_level;
 
     bool extractLinkFromData(std::string& str, std::string& href);
 
 public:
-//    Page(Page& p) {};
-    Page();
+    Page(int level = 1);
     void setName(std::string& name);
     void setPath(std::string& path);
     void setFakeName(std::string& fakeName);
+    void setLevel(int level);
     void writeData(std::string& line);
     void save();
 
     std::string getName();
     std::string getPath();
     std::string getFakeName();
+    int getLevel();
     std::string readData();
     std::string getLink();
     std::deque<std::string> findLinks();
     void replaceLink(std::string& link, std::string& fakeName);
+
 };
 
 #endif // PAGE_H

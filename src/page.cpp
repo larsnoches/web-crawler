@@ -9,7 +9,7 @@
 
 using namespace std;
 
-Page::Page()
+Page::Page(int level) : m_level(level)
 {
     //
 }
@@ -29,6 +29,11 @@ void Page::setFakeName(string& fakeName)
     m_fakeName = fakeName;
 }
 
+void Page::setLevel(int level)
+{
+    m_level = level;
+}
+
 void Page::writeData(std::string& line)
 {
 //    m_stream << line;
@@ -42,30 +47,7 @@ void Page::save()
     if (m_fakeName.empty()) return;
 
     fstream outf("saved/" + m_fakeName + ".html", ios::out);
-//    fstream outf(m_path + m_name, ios::out);
-
-//    size_t size = m_data.size();
-//    outf.write((char*)&size, sizeof(size));
-
-
     outf.write(m_data.data(), m_data.size());
-
-//    ostream_iterator<std::string> outputIterator(outf, "\n");
-//    std::copy(m_data.begin(), m_data.end(), outputIterator);
-
-//    string data = m_stream.str();
-//    int readedLen = 0;
-//    int len = m_data.size();
-
-//    while (readedLen < len)
-//    {
-//        int nextPos = readedLen + 1024;
-//        if (nextPos > len) nextPos = len;
-//        int toReadLen = nextPos - readedLen;
-
-//        outf.write(data.data(), toReadLen);
-//        readedLen = nextPos;
-//    }
     outf.close();
 }
 
@@ -84,10 +66,14 @@ string Page::getFakeName()
     return m_fakeName;
 }
 
+int Page::getLevel()
+{
+    return m_level;
+}
+
 string Page::readData()
 {
     return m_data;
-//    return m_data.data();
 }
 
 string Page::getLink()
@@ -100,7 +86,6 @@ bool Page::extractLinkFromData(std::string& str, std::string& href)
     if (str.empty()) return false;
     string hrefValStart = "href=\"";
     string hrefValEnd = "\"";
-//    string href = hrefRecur;
     if (href.empty())
     {
         size_t pos1 = str.find(hrefValStart, 0);
@@ -123,7 +108,7 @@ bool Page::extractLinkFromData(std::string& str, std::string& href)
         size_t pos1 = str.find(hrefValEnd, 0);
         if (pos1 == string::npos)
         {
-            href += str;// str.substr(0, str.length());
+            href += str;
             return false;
         }
         href += str.substr(0, pos1);
@@ -140,74 +125,31 @@ deque<string> Page::findLinks()
     string currentHref;
 
     std::istringstream iss(m_data);
-    int dataLen = m_data.length();
-    int dataReadedLen = 0;
 
     while (!iss.eof())
     {
-//        int readingLen = 256;
-//        if (dataReadedLen + readingLen > dataLen)
-//        {
-//            readingLen = dataLen - dataReadedLen;
-//        }
-
-//        char line[readingLen];
-//        iss.read(line, readingLen);
-
         // search link
         string lineStr;
         iss >> lineStr;
-        cout << "line:" << lineStr << endl << endl;
+//        cout << "line:" << lineStr << endl << endl;
         while (extractLinkFromData(lineStr, currentHref))
         {
-            cout << "href:" << currentHref << endl << endl;
+            cout << "link:" << currentHref << endl;
             links.push_back(currentHref);
             currentHref.clear();
         }
-        // replace link: m_data.replace()
-
-//        if (!href.empty()) links.push_back(href);
-
-//        dataReadedLen += readingLen;
     }
-
-//    while (dataReadedLen < dataLen)
-//    {
-//        int readingLen = 256;
-//        if (dataReadedLen + readingLen > dataLen)
-//        {
-//            readingLen = dataLen - dataReadedLen;
-//        }
-
-//        char line[readingLen];
-//        iss.read(line, readingLen);
-
-//        // search link
-//        string lineStr = line;
-//        cout << "line:" << lineStr << endl << endl;
-//        while (extractLinkFromData(lineStr, currentHref))
-//        {
-//            cout << "href:" << currentHref << endl << endl;
-//            links.push_back(currentHref);
-//            currentHref.clear();
-//        }
-//        // replace link: m_data.replace()
-
-//        //        if (!href.empty()) links.push_back(href);
-
-//        dataReadedLen += readingLen;
-//    }
-
-
     return links;
 }
 
 void Page::replaceLink(string& link, string& fakeName)
 {
     string whatLink = link;
+    string pseudoName = fakeName + ".html";
     if (link == "/")
     {
         whatLink = "\"/\"";
+        pseudoName = "\"" + fakeName + ".html\"";
     }
-    Util::substitute(m_data, whatLink, fakeName);
+    Util::substitute(m_data, whatLink, pseudoName);
 }

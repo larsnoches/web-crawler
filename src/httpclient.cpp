@@ -12,12 +12,15 @@
 
 using namespace std;
 
-HttpClient::HttpClient(std::string& url, bool useGzipEncoding)
+HttpClient::HttpClient(std::string& url,
+                       bool useGzipEncoding,
+                       int walkLevel)
     : m_port(80),
       m_useSecure(false),
       m_useGzipEncoding(useGzipEncoding),
       m_bodyChunked(false),
-      m_pageCounter(0)
+      m_pageCounter(0),
+      m_walkLevel(walkLevel)
 {
     if (url.find("https://", 0) != string::npos)
     {
@@ -86,6 +89,7 @@ void HttpClient::parseLinks(Page& page)
         string link = links.front();
         links.pop_front();
         if (link.empty()) continue;
+        if (link.find("://") != string::npos) continue;
 
         string host = cropHost(link);
         if (!host.empty() && host != m_host)
@@ -94,7 +98,7 @@ void HttpClient::parseLinks(Page& page)
             continue;
         }
 
-        Page anotherPage = isolatePage(link);
+        Page anotherPage = isolatePage(link, page.getLevel());
         string pageFakeName = anotherPage.getFakeName();
 
         // duplicate check
@@ -112,13 +116,7 @@ void HttpClient::parseLinks(Page& page)
     }
 }
 
-/*
-/index?p=what
-/index.html
-/pages/index
-*/
-
-Page HttpClient::isolatePage(string res)
+Page HttpClient::isolatePage(string res, int prevLevel)
 {
 //    string res = m_resource;
     Util::substitute(res, "...", "");
@@ -131,45 +129,28 @@ Page HttpClient::isolatePage(string res)
         if (nextSlashPos != string::npos) slashPos = nextSlashPos;
     }
     // copy str from next symbol after slash
-    string pageName = res.substr(slashPos + 1, res.length() - slashPos);
+    string pageName = res.substr(
+        slashPos > 0 ? slashPos + 1 : slashPos,
+        res.length() - slashPos
+    );
     string path = slashPos > 0 ? res.substr(0, slashPos + 1) : "";
 
     size_t paramsPos = pageName.find("?");
     if (paramsPos != string::npos)
     {
         pageName = pageName.substr(0, paramsPos);
-//        size_t dotPos = pageName.find(".");
-//        if (dotPos != string::npos)
-//        {
-//            pageName = pageName.substr(0, dotPos);
-//        }
-//        return pageName;
     }
 
     size_t diezPos = pageName.find("#");
     if (diezPos != string::npos)
     {
         pageName = pageName.substr(0, diezPos);
-//        pageName = res.substr(slashPos, diezPos - slashPos);
-//        size_t dotPos = pageName.find(".");
-//        if (dotPos != string::npos)
-//        {
-//            pageName = pageName.substr(0, dotPos);
-//        }
-//        return pageName;
     }
-
-//    pageName = res.substr(slashPos, res.length() - slashPos);
-
-//    size_t dotPos = pageName.find(".");
-//    if (dotPos != string::npos)
-//    {
-//        pageName = pageName.substr(0, dotPos);
-//    }
 
     Page page;
     page.setName(pageName);
     page.setPath(path);
+    page.setLevel(prevLevel + 1);
 
     string fakeName = "page" + to_string(++m_pageCounter);
     page.setFakeName(fakeName);
@@ -194,14 +175,14 @@ bool HttpClient::addPage(Page& page)
 
 bool HttpClient::readHeader(Socket& socket,
                             Page& page,
-                            bool shouldRedirect)
+                            HttpResponseHeader& httpResponseHeader)
 {
     string st = socket.readLine();
     if (st.empty()) return false;
 
     cout << st << endl;
 
-    HttpResponseHeader httpResponseHeader;
+//    HttpResponseHeader httpResponseHeader;
     httpResponseHeader.parseLine(st);
     HttpResult httpResult = httpResponseHeader.getResult();
 
@@ -243,11 +224,17 @@ bool HttpClient::readHeader(Socket& socket,
     // ordinary data
     if (httpResult == HttpResult::HttpOK)
     {
-        return readHeader(socket, page);
+        return readHeader(socket, page, httpResponseHeader);
+    }
+
+    if (httpResult == HttpResult::HttpBadRequest ||
+            httpResult == HttpNotFound)
+    {
+        throw runtime_error("Error request.");
     }
 
     // redirect to specified location
-    shouldRedirect = (httpResult == HttpResult::HttpMovedPermanently
+    bool shouldRedirect = (httpResult == HttpResult::HttpMovedPermanently
         || httpResult == HttpResult::HttpFound || httpResult == HttpResult::HttpSeeOther);
 
     string location = httpResponseHeader.getLocation();
@@ -262,13 +249,13 @@ bool HttpClient::readHeader(Socket& socket,
         if (!m_host.empty()) m_resource = cropResource(m_host, location);
 
         // another request
-        socket.close();
+//        socket.close();
         Socket anotherSocket(m_host, m_port, m_useSecure);
         makeRequest(anotherSocket, page);
         getResponse(anotherSocket, page);
         return true;
     }
-    return readHeader(socket, page, shouldRedirect);
+    return readHeader(socket, page, httpResponseHeader);
 }
 
 string HttpClient::gzipDecompress(const char* data, std::size_t size)
@@ -314,12 +301,18 @@ void HttpClient::makeRequest(Socket& socket, Page& page)
     HttpRequestHeader httpRequestHeader;
     httpRequestHeader.setHost(m_host);
 
-    string gotLink = page.getLink();
-    m_resource = gotLink[0] != '/' ? ("/" + gotLink) : gotLink;
+    m_resource = m_path;
+    string pagePath = page.getPath();
+    if (pagePath.empty() || pagePath == m_resource)
+    {
+        m_resource += page.getName();
+    }
+    else
+    {
+        string gotLink = page.getLink();
+        m_resource += gotLink[0] != '/' ? ("/" + gotLink) : gotLink;
+    }
     httpRequestHeader.setResource(m_resource);
-
-//    Page page = isolatePage();
-//    if (!addPage(page)) return;
 
     if (m_useGzipEncoding) httpRequestHeader.setAcceptEncoding("gzip");
 
@@ -335,7 +328,7 @@ void HttpClient::makeRequest(Socket& socket, Page& page)
     };
     httpRequestHeader.setCustomHeaders(customHeaders);
 
-    cout << httpRequestHeader.buildHeader() << endl;
+    cout << endl << httpRequestHeader.buildHeader() << endl;
     socket.write(httpRequestHeader.buildHeader());
 }
 
@@ -343,7 +336,7 @@ void HttpClient::getResponse(Socket& socket, Page& page)
 {
     bool isHttpHeader = true;
 //    bool shouldRedirect = false;
-//    HttpResponseHeader httpResponseHeader;
+    HttpResponseHeader httpResponseHeader;
     ostringstream pageGzipStream;
 
     while (!socket.isEof())
@@ -364,7 +357,7 @@ void HttpClient::getResponse(Socket& socket, Page& page)
         }
 
         // header
-        isHttpHeader = readHeader(socket, page);
+        isHttpHeader = readHeader(socket, page, httpResponseHeader);
     }
 
     if (m_useGzipEncoding)
@@ -374,7 +367,7 @@ void HttpClient::getResponse(Socket& socket, Page& page)
         page.writeData(pageDecompressed);
     }
 
-    parseLinks(page);
+    if (page.getLevel() < m_walkLevel) parseLinks(page);
     page.save();
 //    m_pages.push_back(page);
 }
@@ -387,9 +380,15 @@ void HttpClient::start()
     cout << "proto: " << (m_useSecure ? "https" : "http") << endl;
     cout << "" << endl;
 
-    Page indexPage = isolatePage(m_resource);
-    addPage(indexPage);
-    run_d();
+    Page indexPage = isolatePage(m_resource, 1);
+    string name = "index";
+    indexPage.setFakeName(name);
+    if (addPage(indexPage))
+    {
+        m_resource = indexPage.getLink();
+        m_path = indexPage.getPath();
+        run_d();
+    }
 
     cout << "" << endl;
     cout << "Stopping" << endl;
@@ -403,13 +402,18 @@ void HttpClient::run_d()
         m_bodyChunked = false;
         m_useGzipEncoding = false;
 
-
         // get page from front
         Page pageItem = m_pages.front();
         m_pages.pop_front();
 
-        makeRequest(socket, pageItem);
-        getResponse(socket, pageItem);
+        try
+        {
+            makeRequest(socket, pageItem);
+            getResponse(socket, pageItem);
+        }
+        catch (exception& e) {
+            continue;
+        }
     }
 }
 

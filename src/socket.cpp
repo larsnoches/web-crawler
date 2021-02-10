@@ -56,20 +56,26 @@ Socket::~Socket()
 
 void Socket::close()
 {
-    if (m_secure)
+    try
     {
-        SSL_shutdown(m_ssl);
-        SSL_free(m_ssl);
+        if (m_secure)
+        {
+            SSL_shutdown(m_ssl);
+            SSL_free(m_ssl);
+        }
+        if (m_sock >= 0)
+        {
+    #ifdef WIN32
+            closesocket(m_sock);
+    #else
+            close(m_sock);
+    #endif
+        }
+        if (m_secure) SSL_CTX_free(m_sslCtx);
     }
-    if (m_sock >= 0)
-    {
-#ifdef WIN32
-        closesocket(m_sock);
-#else
-        close(m_sock);
-#endif
+    catch (exception e) {
+        //
     }
-    if (m_secure) SSL_CTX_free(m_sslCtx);
 }
 
 void Socket::setRemoteIP(std::string& remoteIP)
