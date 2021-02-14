@@ -7,3 +7,7 @@ The tool that walks thru target web-site and saves visited pages to disk.
 After compiling, simply run:
 
     web-crawler.exe https://website /path-to-save
+    
+## Dependencies
+
+For compiling it requires OpenSSL to be installed on local machine.
