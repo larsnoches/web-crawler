@@ -1,3 +1,11 @@
+/**********************************************
+*
+* Copyright 2021 Cyril Selyanin
+* cyr.selyanin@gmail.com
+* https://github.com/larsnoches/web-crawler
+*
+*/
+
 #include "httprequestheader.h"
 #include "util.h"
 
@@ -31,7 +39,7 @@ HttpRequestHeader::HttpRequestHeader()
 void HttpRequestHeader::parseHeaderItem(const string& name, const string& value)
 {
 
-    // Some additional verifications applied to ensure nothing wrong happens later.
+    // some additional verifications applied to ensure nothing wrong happens later
     if (name == "Host")
     {
         m_host = value;
@@ -103,8 +111,8 @@ void HttpRequestHeader::parseLine(const string& line)
         {
             if (items[0] != methodStrings[HttpGet]) throw runtime_error("Only POST and GET methods are supported");
         }
-        // Parameters from resource will be extracted later.
-        // They are not related to the header itself.
+        // parameters from resource will be extracted later
+        // they are not related to the header itself
         m_resource = items[1];
         if (items[2] != "HTTP/1.0") m_keepConnection = true;
     }

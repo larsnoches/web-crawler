@@ -1,10 +1,18 @@
+/**********************************************
+*
+* Copyright 2021 Cyril Selyanin
+* cyr.selyanin@gmail.com
+* https://github.com/larsnoches/web-crawler
+*
+*/
+
 #ifndef HTTPRESPONSEHEADER_H
 #define HTTPRESPONSEHEADER_H
 
 #include <string>
 #include <map>
 
-// Http result for response header.
+// http result for response header
 enum HttpResult
 {
     HttpOK, // 200 OK
@@ -21,53 +29,52 @@ enum HttpResult
     HttpBadGateway // 502 Bad Gateway
 };
 
-// Cookie in the response header.
+// cookie in the response header
 struct ResponseCookie
 {
-    // Cookie's value
+    // cookie's value
     std::string value;
-    // Cookie's expiration time.
+    // cookie's expiration time
     time_t expireTime;
 };
 
 class HttpResponseHeader
 {
 private:
-    // Http result. See HttpResult enum.
+    // http result
     HttpResult m_result;
-    // Server header value.
+    // server header value
     std::string m_server;
-    // The mime type of the content.
+    // the mime type of the content
     std::string m_contentType;
-    // Encoding of content
+    // encoding of content
     std::string m_contentEncoding;
-    // Encoding of transfer
+    // encoding of transfer
     std::string m_transferEncoding;
-    // Redirect location.
+    // redirect location
     std::string m_location;
-    // Content-Length header value.
+    // content-length header value
     long long m_contentLength;
-    // Content range. Used with HttpPartialContent result. Should be -1 if not used.
+    // content range
     long long m_rangeFrom, m_rangeTo, m_rangeTotal;
-    // Last-Modified header value. Should be 0 if not used.
+    // last-modified header value, should be 0 if not used
     time_t m_modifyTime;
-    // Expires header value. Can be used to avoid subsequent requests to static content. Should be
-    // 0 if not used.
+    // expires header value, should be 0 if not used
     time_t m_expireTime;
-    // Cookies as name-value pairs. Cookie's expiration time is additionally stored.
+    // cookies as name-value pairs, cookie's expiration time is additionally stored
     std::map<std::string, ResponseCookie> m_cookies;
-    // Allows to set some custom header, e.g. X-Accel-Redirect for nginx.
+    // allows to set some custom header, e.g. X-Accel-Redirect for nginx
     std::map<std::string, std::string> m_customHeaders;
 
-    // Parse cookies string.
+    // parse cookies string
     void parseCookies(const std::string& st);
-    // Parse single header item string.
+    // parse single header item string
     void parseHeaderItem(const std::string& name, const std::string& value);
 
 public:
-    // Constructs a new header with default values.
+    // constructs a new header with default values
     HttpResponseHeader();
-    // Parse a single line of header data.
+    // parse a single line of header data
     void parseLine(const std::string& line);
     HttpResult getResult();
     std::string getServer();

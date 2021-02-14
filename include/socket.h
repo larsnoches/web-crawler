@@ -1,3 +1,11 @@
+/**********************************************
+*
+* Copyright 2021 Cyril Selyanin
+* cyr.selyanin@gmail.com
+* https://github.com/larsnoches/web-crawler
+*
+*/
+
 #ifndef BASESOCKET_H
 #define BASESOCKET_H
 

@@ -1,3 +1,11 @@
+/**********************************************
+*
+* Copyright 2021 Cyril Selyanin
+* cyr.selyanin@gmail.com
+* https://github.com/larsnoches/web-crawler
+*
+*/
+
 #ifndef UTIL_H
 #define UTIL_H
 
@@ -23,6 +31,7 @@ public:
     static std::string generateRandomString(int len);
     static std::string timestamp(time_t t);
     static std::string mimeType(const std::string& ext);
+    static bool isPathExist(const std::string& s);
 };
 
 #endif // UTIL_H

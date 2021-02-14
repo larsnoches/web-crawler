@@ -1,3 +1,11 @@
+/**********************************************
+*
+* Copyright 2021 Cyril Selyanin
+* cyr.selyanin@gmail.com
+* https://github.com/larsnoches/web-crawler
+*
+*/
+
 #include "httpresponseheader.h"
 #include "util.h"
 
@@ -53,7 +61,7 @@ HttpResponseHeader::HttpResponseHeader()
 void HttpResponseHeader::parseHeaderItem(const string& name,
                                          const string& value)
 {
-    // Some additional verifications applied to ensure nothing wrong happens later.
+    // some additional verifications applied to ensure nothing wrong happens later
     if (name == "Server")
     {
         m_server = value;

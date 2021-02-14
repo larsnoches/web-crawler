@@ -1,3 +1,11 @@
+/**********************************************
+*
+* Copyright 2021 Cyril Selyanin
+* cyr.selyanin@gmail.com
+* https://github.com/larsnoches/web-crawler
+*
+*/
+
 #include "util.h"
 
 #include <sstream>
@@ -5,9 +13,12 @@
 #include <time.h>
 #include <stdlib.h>
 
+#include <sys/types.h>
+#include <sys/stat.h>
+
 using namespace std;
 
-std::string Util::htmlEscape(const std::string& st)
+string Util::htmlEscape(const std::string& st)
 {
     ostringstream r;
     for (size_t i = 0; i < st.length(); i++)
@@ -59,7 +70,7 @@ string Util::fromHexToString(const string& hexString)
   return retString;
 }
 
-std::string Util::stringToLower(const std::string& st)
+string Util::stringToLower(const string& st)
 {
     ostringstream r;
     for (size_t i = 0; i < st.length(); i++)
@@ -69,7 +80,7 @@ std::string Util::stringToLower(const std::string& st)
     return r.str();
 }
 
-std::string Util::urlDecode(const std::string& st)
+string Util::urlDecode(const string& st)
 {
     ostringstream r;
     const char* ptr = st.c_str();
@@ -100,7 +111,7 @@ std::string Util::urlDecode(const std::string& st)
     return r.str();
 }
 
-std::string Util::urlEncode(const std::string& st)
+string Util::urlEncode(const string& st)
 {
     static const char lookupTable[] = "0123456789ABCDEF";
     ostringstream r;
@@ -122,7 +133,7 @@ std::string Util::urlEncode(const std::string& st)
     return r.str();
 }
 
-std::vector<string> Util::extract(const std::string& st)
+vector<string> Util::extract(const string& st)
 {
     vector<string> r;
     unsigned int curPos, valBegin, valEnd;
@@ -161,7 +172,7 @@ std::vector<string> Util::extract(const std::string& st)
     return r;
 }
 
-void Util::substitute(std::string& st, const std::string& what, const std::string& to)
+void Util::substitute(string& st, const string& what, const string& to)
 {
     size_t i = st.find(what);
     if (i != string::npos) st.replace(i, what.length(), to);
@@ -170,7 +181,7 @@ void Util::substitute(std::string& st, const std::string& what, const std::strin
 const char* months[]
     = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
 
-std::string Util::makeHttpTime(time_t t)
+string Util::makeHttpTime(time_t t)
 {
     ostringstream r;
     tm* tms = gmtime(&t);
@@ -187,7 +198,7 @@ std::string Util::makeHttpTime(time_t t)
     return r.str();
 }
 
-time_t Util::parseHttpTime(const std::string& httpTime)
+time_t Util::parseHttpTime(const string& httpTime)
 {
     if (httpTime.length() < 2) return 0;
 
@@ -222,7 +233,7 @@ time_t Util::parseHttpTime(const std::string& httpTime)
     return mktime(&tms);
 }
 
-std::string Util::timestamp(time_t t)
+string Util::timestamp(time_t t)
 {
     ostringstream r;
     tm* tms = localtime(&t);
@@ -247,7 +258,7 @@ std::string Util::timestamp(time_t t)
     return r.str();
 }
 
-std::string Util::utf8Encode(const std::wstring& st)
+string Util::utf8Encode(const wstring& st)
 {
     ostringstream r;
     for (size_t i = 0; i < st.length(); i++)
@@ -274,7 +285,7 @@ std::string Util::utf8Encode(const std::wstring& st)
     return r.str();
 }
 
-std::wstring Util::utf8Decode(const std::string& st)
+wstring Util::utf8Decode(const string& st)
 {
     wstring r;
     size_t i;
@@ -310,7 +321,7 @@ std::wstring Util::utf8Decode(const std::string& st)
     return r;
 }
 
-void Util::trim(std::string& st)
+void Util::trim(string& st)
 {
     while ((!st.empty()) && ((st[0] == ' ') ||
                              (st[0] == '\t') ||
@@ -332,7 +343,7 @@ void Util::trim(std::string& st)
     }
 }
 
-std::string Util::generateRandomString(int len)
+string Util::generateRandomString(int len)
 {
     string r;
     for (int i = 0; i < len; i++)
@@ -342,7 +353,7 @@ std::string Util::generateRandomString(int len)
     return r;
 }
 
-std::string Util::mimeType(const std::string& ext)
+string Util::mimeType(const string& ext)
 {
     string r;
     if (ext == "txt" || ext == "cpp" || ext == "h") r = "text/plain";
@@ -354,4 +365,11 @@ std::string Util::mimeType(const std::string& ext)
     if (ext == "jpg") r = "image/jpeg";
     if (ext == "png") r = "image/png";
     return r;
+}
+
+bool Util::isPathExist(const string& s)
+{
+  struct stat buffer;
+  bool ret = (stat (s.c_str(), &buffer) == 0);
+  return ret;
 }

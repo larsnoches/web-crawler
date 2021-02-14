@@ -1,3 +1,11 @@
+/**********************************************
+*
+* Copyright 2021 Cyril Selyanin
+* cyr.selyanin@gmail.com
+* https://github.com/larsnoches/web-crawler
+*
+*/
+
 #ifndef HTTPCLIENT_H
 #define HTTPCLIENT_H
 
@@ -14,6 +22,7 @@ class HttpClient
     std::string m_host;
     std::string m_resource;
     std::string m_path;
+    std::string m_saveFolder;
     int m_port;
     bool m_useSecure;
     bool m_useGzipEncoding;
@@ -41,6 +50,7 @@ class HttpClient
 
 public:
     HttpClient(std::string& url,
+               std::string& saveFolder,
                bool useGzipEncoding = false,
                int walkLevel = 3);
     void start();

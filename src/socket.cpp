@@ -1,3 +1,11 @@
+/**********************************************
+*
+* Copyright 2021 Cyril Selyanin
+* cyr.selyanin@gmail.com
+* https://github.com/larsnoches/web-crawler
+*
+*/
+
 #include "socket.h"
 
 #include <memory.h>
@@ -103,15 +111,7 @@ void Socket::open(string& host, int port)
     int sd, err;
     struct addrinfo hints = {}, *addrs;
 
-    hints.ai_family = AF_INET; // Since your original code was using sockaddr_in and
-                               // PF_INET, I'm using AF_INET here to match.  Use
-                               // AF_UNSPEC instead if you want to allow getaddrinfo()
-                               // to find both IPv4 and IPv6 addresses for the hostname.
-                               // Just make sure the rest of your code is equally family-
-                               // agnostic when dealing with the IP addresses associated
-                               // with this connection. For instance, make sure any uses
-                               // of sockaddr_in are changed to sockaddr_storage,
-                               // and pay attention to its ss_family field, etc...
+    hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_protocol = IPPROTO_TCP;
 
@@ -157,7 +157,7 @@ void Socket::open(string& host, int port)
 
 void Socket::initSslCtx()
 {
-    // Create new client-method instance
+    // create new client-method instance
     const SSL_METHOD* method = TLS_client_method();
     m_sslCtx = SSL_CTX_new(method);
 
@@ -191,29 +191,6 @@ void Socket::makeSecureConnection()
 
 bool Socket::waitUnbuffered(int timeout)
 {
-//    if (m_secure)
-//    {
-//        switch(SSL_want(m_ssl))
-//        {
-//            case SSL_NOTHING:
-//                cout << "SSL_NOTHING" << endl;
-//                break;
-//            case SSL_WRITING:
-//                cout << "SSL_WRITING" << endl;
-//                break;
-//            case SSL_READING:
-//                cout << "SSL_READING" << endl;
-//                break;
-//            case SSL_ASYNC_PAUSED:
-//                cout << "SSL_ASYNC_PAUSED" << endl;
-//                break;
-//            case SSL_ASYNC_NO_JOBS:
-//                cout << "SSL_ASYNC_NO_JOBS" << endl;
-//                break;
-//        }
-//        cout << (SSL_has_pending(m_ssl) == 1) << endl;
-//        cout << SSL_get_default_timeout(m_ssl) << endl;
-//    }
     fd_set readfds;
     FD_ZERO(&readfds);
     FD_SET(m_sock, &readfds);

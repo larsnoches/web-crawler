@@ -1,3 +1,11 @@
+/**********************************************
+*
+* Copyright 2021 Cyril Selyanin
+* cyr.selyanin@gmail.com
+* https://github.com/larsnoches/web-crawler
+*
+*/
+
 #include "gzipdecompressor.h"
 
 GzipDecompressor::GzipDecompressor(std::size_t max_bytes)

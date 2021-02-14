@@ -1,3 +1,11 @@
+/**********************************************
+*
+* Copyright 2021 Cyril Selyanin
+* cyr.selyanin@gmail.com
+* https://github.com/larsnoches/web-crawler
+*
+*/
+
 #ifndef PAGE_H
 #define PAGE_H
 
@@ -10,12 +18,13 @@ class Page
     std::string m_path;
     std::string m_fakeName;
     std::string m_data;
+    std::string m_saveFolder;
     int m_level;
 
     bool extractLinkFromData(std::string& str, std::string& href);
 
 public:
-    Page(int level = 1);
+    Page(std::string& saveFolder, int level = 1);
     void setName(std::string& name);
     void setPath(std::string& path);
     void setFakeName(std::string& fakeName);

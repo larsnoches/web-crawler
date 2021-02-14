@@ -1,3 +1,11 @@
+/**********************************************
+*
+* Copyright 2021 Cyril Selyanin
+* cyr.selyanin@gmail.com
+* https://github.com/larsnoches/web-crawler
+*
+*/
+
 #include "httpclient.h"
 #include "httprequestheader.h"
 #include "httpresponseheader.h"
@@ -13,9 +21,11 @@
 using namespace std;
 
 HttpClient::HttpClient(std::string& url,
+                       std::string& saveFolder,
                        bool useGzipEncoding,
                        int walkLevel)
-    : m_port(80),
+    : m_saveFolder(saveFolder),
+      m_port(80),
       m_useSecure(false),
       m_useGzipEncoding(useGzipEncoding),
       m_bodyChunked(false),
@@ -118,7 +128,6 @@ void HttpClient::parseLinks(Page& page)
 
 Page HttpClient::isolatePage(string res, int prevLevel)
 {
-//    string res = m_resource;
     Util::substitute(res, "...", "");
 
     // find slash
@@ -147,7 +156,7 @@ Page HttpClient::isolatePage(string res, int prevLevel)
         pageName = pageName.substr(0, diezPos);
     }
 
-    Page page;
+    Page page(m_saveFolder);
     page.setName(pageName);
     page.setPath(path);
     page.setLevel(prevLevel + 1);
@@ -182,7 +191,6 @@ bool HttpClient::readHeader(Socket& socket,
 
     cout << st << endl;
 
-//    HttpResponseHeader httpResponseHeader;
     httpResponseHeader.parseLine(st);
     HttpResult httpResult = httpResponseHeader.getResult();
 
@@ -249,7 +257,6 @@ bool HttpClient::readHeader(Socket& socket,
         if (!m_host.empty()) m_resource = cropResource(m_host, location);
 
         // another request
-//        socket.close();
         Socket anotherSocket(m_host, m_port, m_useSecure);
         makeRequest(anotherSocket, page);
         getResponse(anotherSocket, page);
@@ -335,7 +342,6 @@ void HttpClient::makeRequest(Socket& socket, Page& page)
 void HttpClient::getResponse(Socket& socket, Page& page)
 {
     bool isHttpHeader = true;
-//    bool shouldRedirect = false;
     HttpResponseHeader httpResponseHeader;
     ostringstream pageGzipStream;
 
@@ -369,7 +375,6 @@ void HttpClient::getResponse(Socket& socket, Page& page)
 
     if (page.getLevel() < m_walkLevel) parseLinks(page);
     page.save();
-//    m_pages.push_back(page);
 }
 
 void HttpClient::start()

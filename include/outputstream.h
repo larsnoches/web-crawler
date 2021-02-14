@@ -1,3 +1,11 @@
+/**********************************************
+*
+* Copyright 2021 Cyril Selyanin
+* cyr.selyanin@gmail.com
+* https://github.com/larsnoches/web-crawler
+*
+*/
+
 #ifndef OUTPUTSTREAM_H
 #define OUTPUTSTREAM_H
 
@@ -6,15 +14,15 @@
 class OutputStream
 {
 public:
-    //Write some output.
-    //You should override this method in derived classes.
-    //Return value is the actual number of bytes written.
-    virtual int writeSome(const void* buf,int len)=0;
-    //Write data to the stream.
+    // write some output;
+    // you should override this method in derived classes,
+    // return value is the actual number of bytes written
+    virtual int writeSome(const void* buf, int len) = 0;
+    // write data to the stream
     void write(const std::string& st);
-    //Write data to the stream. Adapted for writing binary objects.
-    void write(const void* buf,int len);
-    //Write line of text to the stream. Differs from Write(string) only by adding '\n' after writing.
+    // write data to the stream, adapted for writing binary objects
+    void write(const void* buf, int len);
+    // write line of text to the stream, differs from write(string) only by adding '\n' after writing
     void writeLine(const std::string& st);
 };
 

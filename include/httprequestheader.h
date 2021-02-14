@@ -1,10 +1,17 @@
+/**********************************************
+*
+* Copyright 2021 Cyril Selyanin
+* cyr.selyanin@gmail.com
+* https://github.com/larsnoches/web-crawler
+*
+*/
+
 #ifndef HTTPREQUESTHEADER_H
 #define HTTPREQUESTHEADER_H
 
 #include <string>
 #include <map>
 
-// Http method. Only GET and POST are usable.
 enum HttpMethod
 {
     HttpGet,
@@ -13,43 +20,43 @@ enum HttpMethod
 
 class HttpRequestHeader
 {
-    // HTTP method, GET is the default one. See HttpMethod enum.
+    // HTTP method, GET is the default one
     HttpMethod m_method;
-    // Host header value.
+    // host header value
     std::string m_host;
-    // Requested resource.
+    // requested resource
     std::string m_resource;
-    // If-Modified-Since header value. Should be 0 if not used.
+    // if-modified-since header value, should be 0 if not used
     time_t m_modifyTime;
-    // User-Agent header value.
+    // user-agent header value
     std::string m_userAgent;
-    // Content range. Should be -1 if not used.
+    // content range, sould be -1 if not used
     long long m_rangeFrom;
     long long m_rangeTo;
-    // Cookies as name-value pairs.
+    // cookies as name-value pairs
     std::map<std::string,std::string> m_cookies;
-    // The mime type of the content.
+    // the mime type of the content
     std::string m_contentType;
-    // Content-Length header value. Should be 0 if not used.
+    // content-length header value, should be 0 if not used
     int m_contentLength;
-    // Allows to set some custom header.
+    // allows to set some custom header
     std::map<std::string,std::string> m_customHeaders;
-    // Is this connection persistent
+    // is this connection persistent
     bool m_keepConnection;
-    // What encoding client accepts (gzip)
+    // what encoding client accepts (gzip)
     std::string m_acceptEncoding;
 
-    // Parse cookies string.
+    // parse cookies string
     void parseCookies(const std::string& st);
-    // Parse single header item string.
+    // parse single header item string
     void parseHeaderItem(const std::string& name,const std::string& value);
 
 public:
-    // Constructs a new header with default values.
+    // constructs a new header with default values
     HttpRequestHeader();
-    // Parse a single line of header data.
+    // parse a single line of header data
     void parseLine(const std::string& line);
-    // Writes the entire header into string.
+    // writes the entire header into string
     std::string buildHeader();
 
     void setKeepConnetion(bool keepConnection);

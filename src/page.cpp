@@ -1,3 +1,11 @@
+/**********************************************
+*
+* Copyright 2021 Cyril Selyanin
+* cyr.selyanin@gmail.com
+* https://github.com/larsnoches/web-crawler
+*
+*/
+
 #include "page.h"
 #include "util.h"
 
@@ -9,7 +17,9 @@
 
 using namespace std;
 
-Page::Page(int level) : m_level(level)
+Page::Page(string& saveFolder, int level)
+    : m_saveFolder(saveFolder),
+      m_level(level)
 {
     //
 }
@@ -36,9 +46,6 @@ void Page::setLevel(int level)
 
 void Page::writeData(std::string& line)
 {
-//    m_stream << line;
-//    m_data.
-//    std::copy(line.begin(), line.end(), std::back_inserter<std::vector<char> >(m_data));
     m_data += line;
 }
 
@@ -46,7 +53,9 @@ void Page::save()
 {
     if (m_fakeName.empty()) return;
 
-    fstream outf("saved/" + m_fakeName + ".html", ios::out);
+    if (m_saveFolder[m_saveFolder.length() - 1] != '/') m_saveFolder += '/';
+
+    fstream outf(m_saveFolder + m_fakeName + ".html", ios::out);
     outf.write(m_data.data(), m_data.size());
     outf.close();
 }
@@ -131,7 +140,7 @@ deque<string> Page::findLinks()
         // search link
         string lineStr;
         iss >> lineStr;
-//        cout << "line:" << lineStr << endl << endl;
+
         while (extractLinkFromData(lineStr, currentHref))
         {
             cout << "link:" << currentHref << endl;
