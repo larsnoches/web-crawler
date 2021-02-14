@@ -10,7 +10,7 @@
 #include "httprequestheader.h"
 #include "httpresponseheader.h"
 #include "util.h"
-#include "gzipdecompressor.h"
+//#include "gzipdecompressor.h"
 
 #include <stdexcept>
 #include <iostream>
@@ -265,13 +265,13 @@ bool HttpClient::readHeader(Socket& socket,
     return readHeader(socket, page, httpResponseHeader);
 }
 
-string HttpClient::gzipDecompress(const char* data, std::size_t size)
-{
-    GzipDecompressor decomp;
-    string output;
-    decomp.decompress(output, data, size);
-    return output;
-}
+//string HttpClient::gzipDecompress(const char* data, std::size_t size)
+//{
+//    GzipDecompressor decomp;
+//    string output;
+//    decomp.decompress(output, data, size);
+//    return output;
+//}
 
 string HttpClient::readBody(Socket& socket, int chunkLen)
 {
@@ -366,12 +366,12 @@ void HttpClient::getResponse(Socket& socket, Page& page)
         isHttpHeader = readHeader(socket, page, httpResponseHeader);
     }
 
-    if (m_useGzipEncoding)
-    {
-        string pageCompressed = pageGzipStream.str();
-        string pageDecompressed = gzipDecompress(pageCompressed.data(), pageCompressed.size());
-        page.writeData(pageDecompressed);
-    }
+//    if (m_useGzipEncoding)
+//    {
+//        string pageCompressed = pageGzipStream.str();
+//        string pageDecompressed = gzipDecompress(pageCompressed.data(), pageCompressed.size());
+//        page.writeData(pageDecompressed);
+//    }
 
     if (page.getLevel() < m_walkLevel) parseLinks(page);
     page.save();
