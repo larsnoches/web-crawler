@@ -20,7 +20,14 @@ int main(int argc, char* argv[])
     try
     {
         string url = "https://nodejs.org/docs/latest-v13.x/api/addons.html";
-        string folderToSave = "/saved";
+        string appPath = argv[0];
+        Util::substitute(appPath, "web-crawler.exe", "");
+        string folderToSave = appPath;
+#ifdef WIN32
+        folderToSave += "\\saved";
+#else
+        folderToSave += "/saved";
+#endif
         if (argc == 3)
         {
             url = argv[1];
@@ -36,7 +43,7 @@ int main(int argc, char* argv[])
         }
         cout << "Path to save:" << folderToSave << endl;
 
-        HttpClient httpClient(url, folderToSave, true);
+        HttpClient httpClient(url, folderToSave);
         httpClient.start();
     }
     catch(exception& e)

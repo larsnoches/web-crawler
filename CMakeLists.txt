@@ -9,8 +9,6 @@ set(DESIRED_WARNINGS "-Wall -Wextra -Wconversion -Wunreachable-code -Wuninitiali
 
 include_directories(
   "include"
-  ${ZLIB_DEPS}
 )
 
 add_subdirectory(src)
-add_subdirectory(deps/zlib-1.2.11)

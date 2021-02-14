@@ -7,7 +7,6 @@ set(SRC_LIST
     httprequestheader.cpp
     httpresponseheader.cpp
     util.cpp
-    gzipdecompressor.cpp
     page.cpp
 )
 
@@ -19,6 +18,6 @@ include(FindOpenSSL)
 if(UNIX)
     target_link_libraries(${PROJECT_NAME} PRIVATE ${CMAKE_DL_LIBS} OpenSSL::SSL OpenSSL::Crypto)
 else(UNIX)
-    target_link_libraries(${PROJECT_NAME} PRIVATE ws2_32 ${CMAKE_DL_LIBS} OpenSSL::SSL OpenSSL::Crypto zlib)
+    target_link_libraries(${PROJECT_NAME} PRIVATE ws2_32 ${CMAKE_DL_LIBS} OpenSSL::SSL OpenSSL::Crypto)
 endif(UNIX)
 

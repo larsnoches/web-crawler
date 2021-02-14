@@ -25,7 +25,6 @@ class HttpClient
     std::string m_saveFolder;
     int m_port;
     bool m_useSecure;
-    bool m_useGzipEncoding;
     bool m_bodyChunked;
     int m_pageCounter;
     int m_walkLevel;
@@ -42,7 +41,6 @@ class HttpClient
     bool readHeader(Socket& socket,
                     Page& page,
                     HttpResponseHeader& httpResponseHeader);
-//    std::string gzipDecompress(const char* data, std::size_t size);
     std::string readBody(Socket& socket, int chunkLen = 0);
     void makeRequest(Socket& socket, Page& page);
     void getResponse(Socket& socket, Page& page);
@@ -51,7 +49,6 @@ class HttpClient
 public:
     HttpClient(std::string& url,
                std::string& saveFolder,
-               bool useGzipEncoding = false,
                int walkLevel = 3);
     void start();
 };

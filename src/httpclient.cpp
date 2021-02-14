@@ -10,7 +10,6 @@
 #include "httprequestheader.h"
 #include "httpresponseheader.h"
 #include "util.h"
-//#include "gzipdecompressor.h"
 
 #include <stdexcept>
 #include <iostream>
@@ -22,12 +21,10 @@ using namespace std;
 
 HttpClient::HttpClient(std::string& url,
                        std::string& saveFolder,
-                       bool useGzipEncoding,
                        int walkLevel)
     : m_saveFolder(saveFolder),
       m_port(80),
       m_useSecure(false),
-      m_useGzipEncoding(useGzipEncoding),
       m_bodyChunked(false),
       m_pageCounter(0),
       m_walkLevel(walkLevel)
@@ -201,23 +198,6 @@ bool HttpClient::readHeader(Socket& socket,
         throw runtime_error("This program is configured for html reading only.");
     }
 
-    // reconnect with gzip encoding
-    if (!m_useGzipEncoding)
-    {
-        string contentEncoding = httpResponseHeader.getContentEncoding();
-        if (!contentEncoding.empty() && contentEncoding.find("gzip", 0) != string::npos)
-        {
-            m_useGzipEncoding = true;
-
-            // another request
-            socket.close();
-            Socket anotherSocket(m_host, m_port, m_useSecure);
-            makeRequest(anotherSocket, page);
-            getResponse(anotherSocket, page);
-            return true;
-        }
-    }
-
     // check for chunked data
     if (!m_bodyChunked)
     {
@@ -264,14 +244,6 @@ bool HttpClient::readHeader(Socket& socket,
     }
     return readHeader(socket, page, httpResponseHeader);
 }
-
-//string HttpClient::gzipDecompress(const char* data, std::size_t size)
-//{
-//    GzipDecompressor decomp;
-//    string output;
-//    decomp.decompress(output, data, size);
-//    return output;
-//}
 
 string HttpClient::readBody(Socket& socket, int chunkLen)
 {
@@ -321,8 +293,6 @@ void HttpClient::makeRequest(Socket& socket, Page& page)
     }
     httpRequestHeader.setResource(m_resource);
 
-    if (m_useGzipEncoding) httpRequestHeader.setAcceptEncoding("gzip");
-
     map<string, string> customHeaders = {
         {
             "Accept",
@@ -343,7 +313,6 @@ void HttpClient::getResponse(Socket& socket, Page& page)
 {
     bool isHttpHeader = true;
     HttpResponseHeader httpResponseHeader;
-    ostringstream pageGzipStream;
 
     while (!socket.isEof())
     {
@@ -353,11 +322,6 @@ void HttpClient::getResponse(Socket& socket, Page& page)
         if (!isHttpHeader)
         {
             string data = readBody(socket);
-            if (m_useGzipEncoding)
-            {
-                pageGzipStream << data;
-                continue;
-            }
             page.writeData(data);
             continue;
         }
@@ -365,13 +329,6 @@ void HttpClient::getResponse(Socket& socket, Page& page)
         // header
         isHttpHeader = readHeader(socket, page, httpResponseHeader);
     }
-
-//    if (m_useGzipEncoding)
-//    {
-//        string pageCompressed = pageGzipStream.str();
-//        string pageDecompressed = gzipDecompress(pageCompressed.data(), pageCompressed.size());
-//        page.writeData(pageDecompressed);
-//    }
 
     if (page.getLevel() < m_walkLevel) parseLinks(page);
     page.save();
@@ -405,7 +362,6 @@ void HttpClient::run_d()
     {
         Socket socket(m_host, m_port, m_useSecure);
         m_bodyChunked = false;
-        m_useGzipEncoding = false;
 
         // get page from front
         Page pageItem = m_pages.front();
