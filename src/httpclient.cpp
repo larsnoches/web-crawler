@@ -41,7 +41,8 @@ HttpClient::HttpClient(std::string& url,
 string HttpClient::cropHost(string url)
 {
     string host;
-    string proto = "://";
+    string proto = "//";
+//    string proto = "://";
     // Find protocol in url
     int hostEndsAt = 0;
     int hostStartsAt = url.find(proto, 0);
@@ -96,7 +97,8 @@ void HttpClient::parseLinks(Page& page)
         string link = links.front();
         links.pop_front();
         if (link.empty()) continue;
-        if (link.find("://") != string::npos) continue;
+//        if (link.find("://") != string::npos) continue;
+        if (link.find("//") != string::npos) continue;
 
         string host = cropHost(link);
         if (!host.empty() && host != m_host)
@@ -330,7 +332,7 @@ void HttpClient::getResponse(Socket& socket, Page& page)
         isHttpHeader = readHeader(socket, page, httpResponseHeader);
     }
 
-    if (page.getLevel() < m_walkLevel) parseLinks(page);
+    if (page.getLevel() <= m_walkLevel) parseLinks(page);
     page.save();
 }
 
